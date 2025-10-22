@@ -10,6 +10,9 @@ export default {
         primary: '#26a69a',
         secondary: '#004d40',
       },
+      willChange: {
+      transform: 'transform',
+    },
     },
   },
   plugins: [],

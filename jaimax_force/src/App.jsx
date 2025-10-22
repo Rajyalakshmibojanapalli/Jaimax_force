@@ -1,76 +1,101 @@
-import React from 'react';
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+
+import LandingPage from "./pages/landingPage/LandingPage";
+import LoginPage from "./pages/authentication/Login";
+import OnBoarding from "./pages/onboarding/onBoarding";
+import SubmitFiles from "./pages/onboarding/submitFiles";
+import ManagerOnboard from "./pages/manager/ManagerOnboard";
+import OnboardingSuccess from "./pages/onboarding/onboardingSucess";
+
+import PrivateRoute from "./router/PrivateRouter";
+import PublicRoute from "./router/PublicRoute";
+import Dashboard from "./pages/dashboard/dashboard";
+import MainLayout from "./Layout/MainLayout";
+import Attendance from "./pages/attendance/attendance";
+import OnboardingStatus from "./pages/onboardingStatus/onboardingStatus";
+import OnboardMembers from "./pages/manager/onBoardmembers";
+import Profile from "./pages/profile/profile";
+import Leaves from "./pages/leaves/leaves";
+import AppliedLeaves from "./pages/manager/AppliedLeaves";
+import TotalTeam from "./pages/manager/TotalTeam";
+import Holidays from "./pages/Holidays/holidays";
+import PfAndInsurance from "./pages/hr/PfAndInsurance";
+import Notifications from "./pages/manager/Notifications";
+import Feedback from "./pages/feedback/Feedback";
+import Payslips from "./pages/hr/paySlips";
+import { useSelector } from "react-redux";
+import ResetPassword from "./pages/authentication/resetPassword";
+import AllEmployeeAttendance from "./pages/attendance/AllEmployeeAttendance";
+import MonthlyStatsOfTeam from "./pages/attendance/MonthlyStatsOfTeam";
+import TeamLeaves from "./pages/leaves/TeamLeaves";
+
 export default function App() {
+  // const userData = localStorage.getItem("user");
+  // const user = userData ? JSON.parse(userData) : null;
+  // const role = user?.role || null;
+  const {user} = useSelector((state)=> state.auth);
+  const role = user?.role || null;
+
   return (
-    <div className="font-sans bg-gray-900 text-white">
-      <section className="min-h-screen relative overflow-hidden">
-        {/* Background with animated gradient */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900 via-gray-900 to-black"></div>
-        
-        {/* Animated grid pattern */}
-        <div className="absolute inset-0 opacity-20">
-          <div className="h-full w-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC40Ij48cGF0aCBkPSJNMzYgMzRoLTJWMGgydjM0em0tNCAwVjBoLTJ2MzRoMnptLTYgMGgyVjBoLTJ2MzR6bS0yIDBoMlYwaC0ydjM0em0tNiAwaDJWMGgtMnYzNHoiLz48L2c+PC9nPjwvc3ZnPg==')]"></div>
-        </div>
-        
-        <div className="container mx-auto px-6 relative z-10 h-screen flex flex-col justify-center items-center md:items-start">
-          <div className="max-w-4xl">
-            {/* Glowing badge */}
-            <div className="inline-flex items-center px-3 py-1 rounded-full bg-opacity-20 bg-purple-500 backdrop-blur-sm border border-purple-400 mb-6 animate-pulse">
-              <div className="h-2 w-2 rounded-full bg-purple-400 mr-2"></div>
-              <span className="text-xs font-semibold text-purple-200">Experience The Future</span>
-            </div>
-            
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight">
-              Welcome to{" "}
-              <span className="relative">
-                <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">Jaimax Force</span>
-                <span className="absolute -bottom-1 left-0 h-3 w-full bg-gradient-to-r from-purple-500 to-pink-500 opacity-50 blur-md"></span>
-              </span>
-            </h1>
-            
-            <p className="text-xl text-gray-300 mb-10 max-w-2xl leading-relaxed">
-              Craft exceptional web experiences with the ultimate React & Tailwind toolkit. Unleash your creativity without limits.
-            </p>
-            
-            <div className="flex flex-wrap gap-5 mb-12">
-              <button className="group relative px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-[0_0_25px_rgba(168,85,247,0.5)]">
-                <span className="relative z-10 font-medium text-white flex items-center">
-                  Get Started
-                  <svg className="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
-                  </svg>
-                </span>
-                <span className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-purple-500 to-pink-500 opacity-0 group-hover:opacity-50 transition-opacity"></span>
-              </button>
-              
-              <button className="px-8 py-4 border border-purple-400 text-purple-300 rounded-lg hover:bg-purple-900 hover:bg-opacity-30 transition-colors duration-300">
-                View Demo
-              </button>
-            </div>
-            
-            {/* Feature highlights */}
-            <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-              <div className="flex items-center space-x-2 px-3 py-2 bg-gray-800 bg-opacity-50 rounded-lg backdrop-blur-sm">
-                <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-                <span className="text-sm">Responsive Design</span>
-              </div>
-              <div className="flex items-center space-x-2 px-3 py-2 bg-gray-800 bg-opacity-50 rounded-lg backdrop-blur-sm">
-                <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                </svg>
-                <span className="text-sm">Lightning Fast</span>
-              </div>
-              <div className="flex items-center space-x-2 px-3 py-2 bg-gray-800 bg-opacity-50 rounded-lg backdrop-blur-sm">
-                <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
-                </svg>
-                <span className="text-sm">Customizable</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
+    <>
+      <ToastContainer />
+      <Routes>
+        {/* ---------- ONBOARDING ROUTES (always public) ---------- */}
+        <Route path="/onboarding/:token" element={<OnBoarding />} />
+        <Route path="/onboarding/form/:selected" element={<SubmitFiles />} />
+        <Route path="/onboarding-success" element={<OnboardingSuccess />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />}/>
+
+        {/* ---------- PUBLIC ROUTES ---------- */}
+        <Route element={<PublicRoute />}>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/" element={<LandingPage />} />
+        </Route>
+
+        {/* ---------- PRIVATE ROUTES ---------- */}
+        <Route element={<PrivateRoute />}>
+          {(role === "admin" || role === "manager" || role === "hr") && (
+            <>
+              <Route path="/dashboard" element={ <MainLayout><Dashboard /></MainLayout>} />
+              <Route path="/manager-onboard" element={<MainLayout><ManagerOnboard /></MainLayout>} />
+              <Route path="/attendance" element={<MainLayout><Attendance /></MainLayout>}/>
+              <Route path="/onboarding-status" element={<MainLayout><OnboardingStatus /></MainLayout>}/>
+              <Route path="/onboard-members" element={<MainLayout><OnboardMembers /></MainLayout>}/>
+              <Route path="/profile" element={<MainLayout><Profile /></MainLayout>}/>
+              <Route path="/leaves" element={<MainLayout><Leaves /></MainLayout>}/>
+              <Route path="/applied-leaves" element={<MainLayout><AppliedLeaves /></MainLayout>}/>
+              <Route path="/total-team" element={<MainLayout><TotalTeam /></MainLayout>}/>
+              <Route path="/holidays" element={<MainLayout><Holidays /></MainLayout>}/>
+              <Route path="/pf-insurance" element={<MainLayout><PfAndInsurance /></MainLayout>}/>
+              <Route path="/notifications" element={<MainLayout><Notifications /></MainLayout>}/>
+              <Route path="/payslips" element={<MainLayout><Payslips /></MainLayout>}/>
+              <Route path="/all-attendance" element={<MainLayout><AllEmployeeAttendance /></MainLayout>}/>
+              <Route path="/all-stats" element={<MainLayout><MonthlyStatsOfTeam /></MainLayout>}/>
+              <Route path="/team-leaves" element={<MainLayout><TeamLeaves /></MainLayout>}/>
+
+            </>
+          )}
+          {/* add employee dashboard here later */}
+          {role === "employee" && (
+            <>
+            <Route path="/dashboard" element={<MainLayout><Dashboard /></MainLayout>} />
+             <Route path="/attendance" element={<MainLayout><Attendance /></MainLayout>}/>
+             <Route path="/onboarding-status" element={<MainLayout><OnboardingStatus /></MainLayout>}/>
+             <Route path="/profile" element={<MainLayout><Profile /></MainLayout>}/>
+             <Route path="/leaves" element={<MainLayout><Leaves /></MainLayout>}/>
+             <Route path="/holidays" element={<MainLayout><Holidays /></MainLayout>}/>
+             <Route path="/pf-insurance" element={<MainLayout><PfAndInsurance /></MainLayout>}/>
+             <Route path="/feedback" element={<MainLayout><Feedback /></MainLayout>}/>
+             <Route path="/payslips" element={<MainLayout><Payslips /></MainLayout>}/>
+             </>
+          )}
+        </Route>
+
+        {/* ---------- FALLBACK ---------- */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
   );
 }
