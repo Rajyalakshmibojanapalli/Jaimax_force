@@ -9,7 +9,7 @@ export function StatsSection() {
   ];
 
   return (
-    <section className="relative py-20 bg-black text-white overflow-hidden">
+    <section className="relative py-28 bg-black text-white overflow-hidden">
       <div className="max-w-6xl mx-auto px-6 md:px-10">
         <motion.div
           className="grid sm:grid-cols-3 gap-12 text-center"
@@ -20,7 +20,7 @@ export function StatsSection() {
         >
           {stats.map((s, i) => (
             <div key={i}>
-              <div className="text-5xl sm:text-6xl font-bold text-[#FFD700] mb-2">
+              <div className="text-5xl sm:text-6xl font-bold text-[#FFD700] mb-2 md:text-4xl lg:text-5xl">
                 <CountUp end={s.value} duration={3.5} separator="," decimals={s.value % 1 ? 1 : 0} />
                 {s.suffix}
               </div>

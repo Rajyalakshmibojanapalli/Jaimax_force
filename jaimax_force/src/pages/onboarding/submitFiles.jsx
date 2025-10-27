@@ -22,11 +22,10 @@ export default function SubmitFiles() {
   // LocalStorage Helpers
   const STORAGE_KEY = "onboardingStepData";
 
-  const saveToLocal = (step, values) => {
+ const saveToLocal = (step, values) => {
   try {
     const clone = JSON.parse(JSON.stringify(values));
 
-    // Skip heavy document data always
     if (clone.documents) {
       clone.documents.forEach((doc) => {
         delete doc.file;
@@ -34,40 +33,47 @@ export default function SubmitFiles() {
       });
     }
 
+    // Retrieve previously saved data
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-    saved[step] = clone;
-    saved.currentStep = step;
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+    // Merge old and new data so previous step info stays
+    const updated = {
+      ...saved,
+      [step]: { ...saved[step], ...clone },
+      currentStep: step,
+    };
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   } catch (err) {
     console.warn("Failed to save step data:", err);
   }
 };
 
+
   const loadFromLocal = () => {
-  try {
-    const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-    return data;
-  } catch {
-    return {};
-  }
-};
+    try {
+      const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+      return data;
+    } catch {
+      return {};
+    }
+  };
 
   const clearLocal = () => {
-  try {
-    // remove main record
-    localStorage.removeItem(STORAGE_KEY);
+    try {
+      // remove main record
+      localStorage.removeItem(STORAGE_KEY);
 
-    // also remove any leftover docs saved individually
-    Object.keys(localStorage)
-      .filter((key) => key.startsWith("onboarding_doc_"))
-      .forEach((key) => localStorage.removeItem(key));
+      // also remove any leftover docs saved individually
+      Object.keys(localStorage)
+        .filter((key) => key.startsWith("onboarding_doc_"))
+        .forEach((key) => localStorage.removeItem(key));
 
-    console.log("Onboarding local data cleared");
-  } catch (err) {
-    console.warn("Failed to clear onboarding data:", err);
-  }
-};
+      console.log("Onboarding local data cleared");
+    } catch (err) {
+      console.warn("Failed to clear onboarding data:", err);
+    }
+  };
 
   const [savedData, setSavedData] = useState({});
   const [savedStep, setSavedStep] = useState(1);
@@ -201,15 +207,18 @@ export default function SubmitFiles() {
             .required("Start date is required")
             .max(new Date(), "Start date cannot be in the future"),
           endDate: Yup.date()
-  .nullable(true)
-  .when("currentlyWorking", {
-    is: (val) => val === false || val === "false",
-    then: (schema) =>
-      schema
-        .required("End date is required")
-        .min(Yup.ref("startDate"), "End date must be after start date"),
-  })
-  .min(Yup.ref("startDate"), "End date must be after start date"),
+            .nullable(true)
+            .when("currentlyWorking", {
+              is: (val) => val === false || val === "false",
+              then: (schema) =>
+                schema
+                  .required("End date is required")
+                  .min(
+                    Yup.ref("startDate"),
+                    "End date must be after start date"
+                  ),
+            })
+            .min(Yup.ref("startDate"), "End date must be after start date"),
           responsibilities: Yup.string().required(
             "Responsibilities are required"
           ),
@@ -220,78 +229,79 @@ export default function SubmitFiles() {
 
   const schemaStep8Skills = Yup.object({
     skills: Yup.array()
-  .of(Yup.string().trim().required("Skill is required"))
-  .min(1, "At least one skill is required")
-  .test("not-empty", "Please enter at least one valid skill", (arr) =>
-    arr && arr.length && arr.some((v) => v.trim() !== "")
-  ),
+      .of(Yup.string().trim().required("Skill is required"))
+      .min(1, "At least one skill is required")
+      .test(
+        "not-empty",
+        "Please enter at least one valid skill",
+        (arr) => arr && arr.length && arr.some((v) => v.trim() !== "")
+      ),
   });
 
- const getDocumentsSchema = (educationArray) => {
-  const requiredDocs = ["Aadhaar Card", "PAN Card"];
+  const getDocumentsSchema = (educationArray) => {
+    const requiredDocs = ["Aadhaar Card", "PAN Card"];
 
-  educationArray.forEach((edu) => {
-    if (edu.degree) requiredDocs.push(`${edu.degree} Certificate`);
-  });
+    educationArray.forEach((edu) => {
+      if (edu.degree) requiredDocs.push(`${edu.degree} Certificate`);
+    });
 
-  if (isExperienced) {
-    // use array-of-options for flexible matching
-    requiredDocs.push(["Offer Letter", "Relieving Letter"]);
-    requiredDocs.push("Experience Letter");
-  }
+    if (isExperienced) {
+      // use array-of-options for flexible matching
+      requiredDocs.push(["Offer Letter", "Relieving Letter"]);
+      requiredDocs.push("Experience Letter");
+    }
 
-  return Yup.object({
-    documents: Yup.array()
-      .of(
-        Yup.object({
-          type: Yup.string().required("Document type is required"),
-          file: Yup.mixed().required("Document file is required"),
-        })
-      )
-      .test("required-docs", "Missing required documents", function (docs) {
-        if (!docs || docs.length === 0) {
-          return this.createError({
-            message:
-              "Please upload all required documents: Aadhaar, PAN, and Certificates.",
-          });
-        }
+    return Yup.object({
+      documents: Yup.array()
+        .of(
+          Yup.object({
+            type: Yup.string().required("Document type is required"),
+            file: Yup.mixed().required("Document file is required"),
+          })
+        )
+        .test("required-docs", "Missing required documents", function (docs) {
+          if (!docs || docs.length === 0) {
+            return this.createError({
+              message:
+                "Please upload all required documents: Aadhaar, PAN, and Certificates.",
+            });
+          }
 
-        const uploadedTypes = docs
-          .filter((d) => d.file)
-          .map((d) => (d.type || "").trim().toLowerCase());
+          const uploadedTypes = docs
+            .filter((d) => d.file)
+            .map((d) => (d.type || "").trim().toLowerCase());
 
-        // iterate all required docs
-        for (const req of requiredDocs) {
-          // handle either/or groups
-          if (Array.isArray(req)) {
-            const hasAny = req.some((opt) =>
-              uploadedTypes.some((t) =>
-                t.includes(opt.toLowerCase().split(" ")[0])
-              )
-            );
-            if (!hasAny) {
-              return this.createError({
-                message: `${req.join(" or ")} is required`,
-              });
-            }
-          } else {
-            // normal required doc
-            const hasMatch = uploadedTypes.some((t) =>
-              t.includes(req.toLowerCase().split(" ")[0])
-            );
-            if (!hasMatch) {
-              return this.createError({
-                message: `${req} is required`,
-              });
+          // iterate all required docs
+          for (const req of requiredDocs) {
+            // handle either/or groups
+            if (Array.isArray(req)) {
+              const hasAny = req.some((opt) =>
+                uploadedTypes.some((t) =>
+                  t.includes(opt.toLowerCase().split(" ")[0])
+                )
+              );
+              if (!hasAny) {
+                return this.createError({
+                  message: `${req.join(" or ")} is required`,
+                });
+              }
+            } else {
+              // normal required doc
+              const hasMatch = uploadedTypes.some((t) =>
+                t.includes(req.toLowerCase().split(" ")[0])
+              );
+              if (!hasMatch) {
+                return this.createError({
+                  message: `${req} is required`,
+                });
+              }
             }
           }
-        }
 
-        return true;
-      }),
-  });
-};
-
+          return true;
+        }),
+    });
+  };
 
   const schemaStep10Password = Yup.object({
     temporaryPassword: Yup.string().required("Temporary password is required"),
@@ -639,7 +649,8 @@ export default function SubmitFiles() {
           onSubmit={() => {}} // handled manually per step
         >
           {(formik) => {
-            const { values, setFieldValue, errors, touched,validateForm } = formik;
+            const { values, setFieldValue, errors, touched, validateForm } =
+              formik;
 
             useEffect(() => {
               if (Object.keys(formikValues).length > 0) {
@@ -652,11 +663,10 @@ export default function SubmitFiles() {
             }, [values]);
 
             useEffect(() => {
-  if (values.documents.length === 0) {
-    setFieldValue("documents", [{ type: "", file: null }]);
-  }
-}, [values.documents, setFieldValue]);
-
+              if (values.documents.length === 0) {
+                setFieldValue("documents", [{ type: "", file: null }]);
+              }
+            }, [values.documents, setFieldValue]);
 
             const goNext = async () => {
               if (isSubmittingStep) return;
@@ -799,7 +809,7 @@ export default function SubmitFiles() {
                         <Field
                           type="date"
                           name="dateOfBirth"
-                          className={inputCls}
+                          className={`${inputCls} [color-scheme:dark] text-white`}
                         />
                         <ErrorMessage name="dateOfBirth" formik={formik} />
                       </div>
@@ -884,39 +894,40 @@ export default function SubmitFiles() {
 
                     <div className="space-y-5">
                       <div>
-  <label className={labelCls}>
-    Profile Image <span className="text-red-400">*</span>
-  </label>
+                        <label className={labelCls}>
+                          Profile Image <span className="text-red-400">*</span>
+                        </label>
 
-  <input
-    type="file"
-    accept="image/*"
-    onChange={(e) => {
-      const file = e.target.files[0];
-      if (file) setFieldValue("profilePicture", file);
-    }}
-    className="text-sm text-gray-200 w-full sm:w-auto 
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) setFieldValue("profilePicture", file);
+                          }}
+                          className="text-sm text-gray-200 w-full sm:w-auto 
                file:mr-2 file:rounded-md file:bg-[#FFD700] 
                file:text-black file:font-semibold 
                [@media(max-width:768px)]:text-transparent"
-    style={{ cursor: "pointer" }}
-  />
+                          style={{ cursor: "pointer" }}
+                        />
 
-  {/* show filename cleanly below the input */}
-  {values.profilePicture && (
-    <p className="text-xs text-gray-400 mt-1">
-      Selected: {values.profilePicture.name}
-    </p>
-  )}
+                        {/* show filename cleanly below the input */}
+                        {values.profilePicture && (
+                          <p className="text-xs text-gray-400 mt-1">
+                            Selected: {values.profilePicture.name}
+                          </p>
+                        )}
 
-  {touched.profilePicture && errors.profilePicture && (
-    <div className={errorCls}>{errors.profilePicture}</div>
-  )}
-</div>
-
+                        {touched.profilePicture && errors.profilePicture && (
+                          <div className={errorCls}>
+                            {errors.profilePicture}
+                          </div>
+                        )}
+                      </div>
 
                       {values.profilePicture instanceof Blob && (
-                        <div className="mt-3 flex flex-col sm:flex-row items-center gap-4">
+                        <div className="mt-3 flex flex-col sm:flex-col items-center gap-4">
                           <img
                             src={URL.createObjectURL(values.profilePicture)}
                             alt="Preview"
@@ -1269,8 +1280,7 @@ export default function SubmitFiles() {
                                   form.setFieldValue(
                                     "accountHolderName",
                                     v
-                                      .trim()
-                                      // .replace(/\b\w/g, (c) => c.toUpperCase())
+                                    // .replace(/\b\w/g, (c) => c.toUpperCase())
                                   );
                               }}
                             />
@@ -1523,7 +1533,7 @@ export default function SubmitFiles() {
                                   <Field
                                     type="date"
                                     name={`education.${i}.startDate`}
-                                    className={inputCls}
+                                    className={`${inputCls} [color-scheme:dark] text-white`}
                                   />
                                   {touched.education?.[i]?.startDate &&
                                     errors.education?.[i]?.startDate && (
@@ -1541,7 +1551,7 @@ export default function SubmitFiles() {
                                   <Field
                                     type="date"
                                     name={`education.${i}.endDate`}
-                                    className={inputCls}
+                                    className={`${inputCls} [color-scheme:dark] text-white`}
                                   />
                                   {touched.education?.[i]?.endDate &&
                                     errors.education?.[i]?.endDate && (
@@ -1881,28 +1891,29 @@ export default function SubmitFiles() {
                       </button>
 
                       <button
-  type="button"
-  disabled={isSubmittingStep}
-  onClick={async () => {
-    const errors = await validateForm();
-    const hasErrors = Object.keys(errors).length > 0;
+                        type="button"
+                        disabled={isSubmittingStep}
+                        onClick={async () => {
+                          const errors = await validateForm();
+                          const hasErrors = Object.keys(errors).length > 0;
 
-    if (hasErrors) {
-      toast.error("Please add at least one valid skill before continuing.");
-      return;
-    }
+                          if (hasErrors) {
+                            toast.error(
+                              "Please add at least one valid skill before continuing."
+                            );
+                            return;
+                          }
 
-    goNext();
-  }}
-  className={`w-full sm:w-auto px-6 sm:px-8 py-3 bg-[#FFD700] text-black font-bold rounded-lg transition ${
-    isSubmittingStep
-      ? "opacity-60 cursor-not-allowed"
-      : "hover:bg-[#FFC800]"
-  }`}
->
-  {isSubmittingStep ? "Saving..." : "Continue →"}
-</button>
-
+                          goNext();
+                        }}
+                        className={`w-full sm:w-auto px-6 sm:px-8 py-3 bg-[#FFD700] text-black font-bold rounded-lg transition ${
+                          isSubmittingStep
+                            ? "opacity-60 cursor-not-allowed"
+                            : "hover:bg-[#FFC800]"
+                        }`}
+                      >
+                        {isSubmittingStep ? "Saving..." : "Continue →"}
+                      </button>
                     </div>
                   </div>
                 )}
@@ -1926,17 +1937,21 @@ export default function SubmitFiles() {
                         <li>
                           PAN Card <span className="text-red-400">*</span>
                         </li>
-                        {values.education.map(
-                          (edu, idx) =>
-                            edu.degree && (
-                              <li
-                                key={idx}
-                                value={`${edu.degree} Certificate`}
-                              >
-                                {edu.degree} Certificate
-                              </li>
-                            )
-                        )}
+                        {values.education && values.education.length > 0 ? (
+      values.education.map(
+        (edu, idx) =>
+          edu.degree && (
+            <li key={idx}>
+              {edu.degree} Certificate{" "}
+              <span className="text-red-400">*</span>
+            </li>
+          )
+      )
+    ) : (
+      <li className="text-gray-500 italic">
+        No education details added yet.
+      </li>
+    )}
 
                         {isExperienced && (
                           <>
@@ -2113,12 +2128,11 @@ export default function SubmitFiles() {
 
                                   {doc.file && (
                                     <p
-  className="text-xs text-gray-400 mt-1 truncate max-w-[230px]"
-  title={doc.file.name}
->
-  Selected: {doc.file.name}
-</p>
-
+                                      className="text-xs text-gray-400 mt-1 truncate max-w-[230px]"
+                                      title={doc.file.name}
+                                    >
+                                      Selected: {doc.file.name}
+                                    </p>
                                   )}
                                   {touched.documents?.[i]?.file &&
                                     errors.documents?.[i]?.file && (
@@ -2144,7 +2158,9 @@ export default function SubmitFiles() {
                           <button
                             type="button"
                             className="mt-2 text-[#FFD700] hover:text-[#FFC800] font-medium"
-                            onClick={() => arrayHelpers.push({ type: "", file: null })}
+                            onClick={() =>
+                              arrayHelpers.push({ type: "", file: null })
+                            }
                           >
                             + Add Another Document
                           </button>

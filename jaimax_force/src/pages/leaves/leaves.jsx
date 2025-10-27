@@ -4,18 +4,16 @@ import { CalendarDays, PlusCircle, FileText, X } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
-  useGetAllLeavesQuery,
   useApplyLeaveMutation,
   useGetSingleLeaveQuery,
   useCancelLeaveMutation,
-  useGetLeavesSummaryQuery,
-  useGetBalancedLeavesQuery,
 } from "../../features/leaves/leavesApiSlice";
 import { useSelector } from "react-redux";
 
 export default function Leaves() {
   const { user } = useSelector((state) => state.auth);
   const role = user?.role?.toLowerCase();
+  const employeeId = user?.employeeId;
 
   const [showModal, setShowModal] = useState(false);
   const [leaveType, setLeaveType] = useState("");
@@ -24,7 +22,15 @@ export default function Leaves() {
   const [endDate, setEndDate] = useState("");
   const [attachments, setAttachments] = useState([]);
 
-  const { data, isLoading, isError } = useGetAllLeavesQuery();
+  // const { data, isLoading, isError } = useGetAllLeavesQuery();
+  const {allLeaves: data, summary: summaryData, balance: balanceData }= useSelector((state)=> state.leaves);
+  const leaves = data?.leaves || [];
+  const filteredLeaves = employeeId ? leaves.filter((item) => item.employeeId === employeeId): [];
+  const isLoading = !leaves;
+  // console.log("balanceData", balanceData)
+  // console.log("data", data)
+  // console.log(summaryData)
+
   const [applyLeave, { isLoading: submitting }] = useApplyLeaveMutation();
 
   const [selectedLeaveId, setSelectedLeaveId] = useState(null);
@@ -33,12 +39,12 @@ export default function Leaves() {
 
   const [cancelLeave, { isLoading: canceling }] = useCancelLeaveMutation();
 
-  const { data: summaryData } = useGetLeavesSummaryQuery(user?.id, {
-    skip: !user?.id,
-  });
-  const { data: balanceData } = useGetBalancedLeavesQuery(user?.id, {
-    skip: !user?.id,
-  });
+  // const { data: summaryData } = useGetLeavesSummaryQuery(user?.id, {
+  //   skip: !user?.id,
+  // });
+  // const { data: balanceData } = useGetBalancedLeavesQuery(user?.id, {
+  //   skip: !user?.id,
+  // });
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
@@ -92,10 +98,9 @@ export default function Leaves() {
     }
   };
 
-  const leaves = data?.data?.leaves || [];
 
   return (
-    <div className="flex flex-col flex-1 overflow-y-auto bg-[#0f0f0f] text-white p-6 md:p-8">
+    <div className="flex flex-col flex-1 overflow-y-auto bg-[#0f0f0f] text-white p-4 md:p-4">
       <ToastContainer />
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
@@ -119,9 +124,9 @@ export default function Leaves() {
 
         {isLoading ? (
           <p className="text-gray-400 text-sm">Loading leaves...</p>
-        ) : isError ? (
+        ) : (!leaves) ? (
           <p className="text-red-400 text-sm">Failed to load leaves.</p>
-        ) : leaves.length === 0 ? (
+        ) : filteredLeaves.length === 0 ? (
           <p className="text-gray-400 text-sm">No leave records found.</p>
         ) : (
           <div className="overflow-x-auto">
@@ -187,21 +192,22 @@ export default function Leaves() {
         )}
       </div>
 
-{/* 🟨 Leave Balance Section */}
-{balanceData?.data?.leaveBalance && (
+{/* Leave Balance Section */}
+{balanceData?.leaveBalance && (
   <div className="mt-10 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 shadow-md">
     <h2 className="text-xl font-semibold text-[#FFD700] mb-4">
       Leave Balances
     </h2>
 
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {Object.entries(balanceData.data.leaveBalance)
+      {Object.entries(balanceData.leaveBalance)
   .filter(([key]) => !key.toLowerCase().startsWith("total"))
   .map(([key, remaining]) => {
-    const cleanType = key.replace("Leave", "").toLowerCase(); // e.g. casualLeave → casual
-    const totalKey = `total${cleanType}`; // correct mapping: totalcasual
-    const total = balanceData.data.leaveBalance[totalKey] ?? remaining;
+    const cleanType = key.replace("Leave", "").toLowerCase();
+    const totalKey = `total${cleanType}`;
+    const total = balanceData.leaveBalance[totalKey] ?? remaining;
     const used = total - remaining;
+
     return (
       <div
         key={key}
@@ -224,47 +230,47 @@ export default function Leaves() {
   </div>
 )}
 
-{/* 🟩 Leave Summary Section */}
-{summaryData?.data?.summary && (
+{/* Leave Summary Section */}
+{summaryData?.summary && (
   <div className="mt-10 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 shadow-md">
     <h2 className="text-xl font-semibold text-[#FFD700] mb-4">
-      Leave Summary ({summaryData.data.year})
+      Leave Summary ({summaryData?.year})
     </h2>
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
       <div className="bg-[#111] border border-[#2a2a2a] rounded-xl p-4 text-center">
         <p className="text-gray-400 text-sm">Total Applied</p>
         <p className="text-2xl font-bold text-[#FFD700]">
-          {summaryData.data.summary.totalApplied}
+          {summaryData?.summary?.totalApplied}
         </p>
       </div>
       <div className="bg-[#111] border border-[#2a2a2a] rounded-xl p-4 text-center">
         <p className="text-gray-400 text-sm">Pending</p>
         <p className="text-2xl font-bold text-yellow-400">
-          {summaryData.data.summary.pending}
+          {summaryData?.summary?.pending}
         </p>
       </div>
       <div className="bg-[#111] border border-[#2a2a2a] rounded-xl p-4 text-center">
         <p className="text-gray-400 text-sm">Approved</p>
         <p className="text-2xl font-bold text-green-400">
-          {summaryData.data.summary.approved}
+          {summaryData?.summary?.approved}
         </p>
       </div>
       <div className="bg-[#111] border border-[#2a2a2a] rounded-xl p-4 text-center">
         <p className="text-gray-400 text-sm">Cancelled</p>
         <p className="text-2xl font-bold text-gray-400">
-          {summaryData.data.summary.cancelled}
+          {summaryData?.summary?.cancelled}
         </p>
       </div>
       <div className="bg-[#111] border border-[#2a2a2a] rounded-xl p-4 text-center">
         <p className="text-gray-400 text-sm">Rejected</p>
         <p className="text-2xl font-bold text-red-400">
-          {summaryData.data.summary.rejected}
+          {summaryData?.summary?.rejected}
         </p>
       </div>
       <div className="bg-[#111] border border-[#2a2a2a] rounded-xl p-4 text-center">
         <p className="text-gray-400 text-sm">Total Days Taken</p>
         <p className="text-2xl font-bold text-[#FFD700]">
-          {summaryData.data.summary.totalDaysTaken}
+          {summaryData?.summary?.totalDaysTaken}
         </p>
       </div>
     </div>

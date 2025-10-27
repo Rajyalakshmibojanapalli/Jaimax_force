@@ -38,65 +38,82 @@ export const attendanceApi = apiSlice.injectEndpoints({
     }),
 
     getAllAttendance: builder.query({
-        query: ({startDate, endDate, employeeId, sortBy, sortOrder, status}) =>{
-            const today = new Date().toISOString().split("T")[0];
-            const from = startDate || today;
-            const to = endDate || today;
+      query: ({
+        startDate,
+        endDate,
+        employeeId,
+        sortBy,
+        sortOrder,
+        status,
+      }) => {
+        const today = new Date().toISOString().split("T")[0];
+        const from = startDate || today;
+        const to = endDate || today;
 
-            let url = `/jaimaxforceattendance/getallattendance?startDate=${from}&endDate=${to}`;
+        let url = `/jaimaxforceattendance/getallattendance?startDate=${from}&endDate=${to}`;
 
-            if(employeeId) url += `&employeeId=${employeeId}`;
-            if(sortBy) url += `&sortBy=${sortBy}`;
-            if(sortOrder) url += `&sortOrder=${sortOrder}`;
-            if(status) url += `&status=${status}`;
+        if (employeeId) url += `&employeeId=${employeeId}`;
+        if (sortBy) url += `&sortBy=${sortBy}`;
+        if (sortOrder) url += `&sortOrder=${sortOrder}`;
+        if (status) url += `&status=${status}`;
 
-            return{
-                url,
-                method: "GET",
-                headers: { "Content-Type": "application/json" },
-            };     
-        },
-        providesTags: ["AllAttendance"],
+        return {
+          url,
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        };
+      },
+      providesTags: ["AllAttendance"],
     }),
 
     getMonthlyAttendanceStats: builder.query({
-        query: ({userId, month, year}) => {
-            const now = new Date();
-             // Default to current month and year if not provided
-    const currentMonth = now.getMonth() + 1; // JS months are 0-based
-    const currentYear = now.getFullYear();
+      query: ({ userId, month, year }) => {
+        const now = new Date();
+        // Default to current month and year if not provided
+        const currentMonth = now.getMonth() + 1; // JS months are 0-based
+        const currentYear = now.getFullYear();
 
-    const selectedMonth = month || currentMonth;
-    const selectedYear = year || currentYear;
+        const selectedMonth = month || currentMonth;
+        const selectedYear = year || currentYear;
 
-    return {
-      url: `/jaimaxforceattendance/stats/${userId}/monthly?month=${selectedMonth}&year=${selectedYear}`,
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    };
-  },
-  providesTags: ["AttendanceStats"],
-}),
-// /jaimaxforceattendance/stats/all/allmonthly?month=10&year=2025
- getAllUsersMonthlyAttendance: builder.query({
-  query: ({userId, month, year}) => {
-    const now = new Date();
+        return {
+          url: `/jaimaxforceattendance/stats/${userId}/monthly?month=${selectedMonth}&year=${selectedYear}`,
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        };
+      },
+      providesTags: ["AttendanceStats"],
+    }),
+    // /jaimaxforceattendance/stats/all/allmonthly?month=10&year=2025
+    getAllUsersMonthlyAttendance: builder.query({
+      query: ({ userId, month, year }) => {
+        const now = new Date();
 
-    const currentMonth = now.getMonth() + 1;
-    const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth() + 1;
+        const currentYear = now.getFullYear();
 
-    userId = userId || "all";
-    const selectedMonth = month || currentMonth;
-    const selectedYear = year || currentYear;
+        userId = userId || "all";
+        const selectedMonth = month || currentMonth;
+        const selectedYear = year || currentYear;
 
-    return {
-      url: `/jaimaxforceattendance/stats/${userId}/allmonthly?month=${selectedMonth}&year=${selectedYear}`,
-      method:"GET",
-      headers: { "Content-Type": "application/json" },
-    };
-  },
-  providesTags: ["AttendanceStats"],
- }),
+        return {
+          url: `/jaimaxforceattendance/stats/${userId}/allmonthly?month=${selectedMonth}&year=${selectedYear}`,
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        };
+      },
+      providesTags: ["AttendanceStats"],
+    }),
+    // update attendance by hr or admin
+    updateAttendance: builder.mutation({
+      query: ({id, body}) => ({
+        url: `/jaimaxforceattendance/admin-update/${id}`,
+        method: "PATCH",
+        body,
+        headers: { "Content-Type": "application/json" },
+      }),
+      invalidatesTags:["Attendance"],
+    }),
   }),
 });
 
@@ -107,4 +124,5 @@ export const {
   useGetAllAttendanceQuery,
   useGetMonthlyAttendanceStatsQuery,
   useGetAllUsersMonthlyAttendanceQuery,
+  useUpdateAttendanceMutation,
 } = attendanceApi;

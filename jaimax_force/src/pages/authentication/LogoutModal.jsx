@@ -5,6 +5,11 @@ import { useLogoutUserMutation } from "../../features/auth/loginApiSlice";
 import { toast } from "react-toastify";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch } from "react-redux";
+import { logout } from "../../features/auth/authSlice";
+import { AlertTriangle } from "lucide-react";
+import { clearProfile } from "../../features/profile/profileSlice";
+import { persistor } from "../../app/store";
+import { clearAttendance } from "../../features/attendance/attendanceSlice";
 
 export default function LogoutModal({
   triggerText = "Logout",
@@ -28,8 +33,11 @@ export default function LogoutModal({
     setTimeout(() => {
       dispatch(logout()); // Clear tokens AFTER showing toast
       setOpen(false);
-      navigate("/");
-    }, 1800);
+      dispatch(clearProfile());
+      dispatch(clearAttendance());
+      persistor.purge();
+      navigate("/login");
+    }, 1000);
   } catch (err) {
     toast.error(err?.data?.message || "Logout failed. Please try again.");
   }
@@ -58,7 +66,7 @@ export default function LogoutModal({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+              className="fixed inset-0 z-[999] flex items-center justify-center bg-transparent backdrop-blur-sm"
             >
               <motion.div
                 key="modal-content"
@@ -68,12 +76,13 @@ export default function LogoutModal({
                 transition={{ duration: 0.25 }}
                 className="bg-[#1a1a1a] border border-[#FFD700]/30 rounded-2xl p-6 sm:p-8 shadow-2xl w-[90%] sm:w-[420px] text-center"
               >
+                <AlertTriangle size={40} className="text-red-500 mx-auto mb-4"/>
                 <h2 className="text-2xl font-bold text-[#FFD700] mb-4">
                   Confirm Logout
                 </h2>
                 <p className="text-gray-300 mb-8 text-sm sm:text-base leading-relaxed">
                   Are you sure you want to logout? You’ll be redirected to the
-                  landing page.
+                  login page.
                 </p>
 
                 <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">

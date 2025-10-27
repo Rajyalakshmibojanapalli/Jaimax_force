@@ -95,19 +95,19 @@ export default function ManagerOnboard() {
 
     const payload = {
       personalInfo: {
-        firstName: capitalizeWords(values.firstName),
-        lastName: capitalizeWords(values.lastName),
+        firstName: values.firstName,
+        lastName: values.lastName,
         email: values.email,
         phone: values.phone,
         dateOfBirth: values.dob,
         gender: capitalizeWords(values.gender),
       },
       companyInfo: {
-        department: capitalizeWords(values.department),
-        designation: capitalizeWords(values.designation),
+        department: values.department,
+        designation: values.designation,
         dateOfJoining: values.joinDate,
         employmentType: capitalizeWords(values.employmentType),
-        workLocation: capitalizeWords(values.workLocation),
+        workLocation: values.workLocation,
         workShift: capitalizeWords(values.workShift),
       },
       role: values.role.toLowerCase(), // keep lowercase
@@ -221,9 +221,15 @@ export default function ManagerOnboard() {
                       className={inputCls}
                       value={values.firstName}
                       onChange={(e) => {
-                        if (/^[A-Za-z ]*$/.test(e.target.value))
-                          setFieldValue("firstName", e.target.value);
-                      }}
+  const input = e.target.value;
+  if (/^[A-Za-z ]*$/.test(input)) {
+    // Capitalize each word as user types
+    const formatted = input
+      .toLowerCase()
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+    setFieldValue("firstName", formatted);
+  }
+}}
                       placeholder="Enter first name"
                     />
                     <ErrorMessage
@@ -241,9 +247,15 @@ export default function ManagerOnboard() {
                       className={inputCls}
                       value={values.lastName}
                       onChange={(e) => {
-                        if (/^[A-Za-z ]*$/.test(e.target.value))
-                          setFieldValue("lastName", e.target.value);
-                      }}
+  const input = e.target.value;
+  if (/^[A-Za-z ]*$/.test(input)) {
+    // Capitalize each word as user types
+    const formatted = input
+      .toLowerCase()
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+    setFieldValue("lastName", formatted);
+  }
+}}
                       placeholder="Enter last name"
                     />
                     <ErrorMessage
@@ -272,7 +284,7 @@ export default function ManagerOnboard() {
                   {/* DOB */}
                   <div>
                     <ReqLabel>Date of Birth</ReqLabel>
-                    <Field type="date" name="dob" className={inputCls} />
+                    <Field type="date" name="dob" className={`${inputCls} [color-scheme:dark] text-gray-700`}/>
                     <ErrorMessage
                       name="dob"
                       component="div"
@@ -328,9 +340,15 @@ export default function ManagerOnboard() {
                         className={inputCls}
                         value={values[f.name]}
                         onChange={(e) => {
-                          if (/^[A-Za-z ]*$/.test(e.target.value))
-                            setFieldValue(f.name, e.target.value);
-                        }}
+  const input = e.target.value;
+  if (/^[A-Za-z ]*$/.test(input)) {
+    // Capitalize each word as user types
+    const formatted = input
+      .toLowerCase()
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+    setFieldValue(f.name, formatted);
+  }
+}}
                         placeholder={`Enter ${f.label.toLowerCase()}`}
                       />
                       <ErrorMessage
@@ -343,7 +361,7 @@ export default function ManagerOnboard() {
 
                   <div>
                     <ReqLabel>Date of Joining</ReqLabel>
-                    <Field type="date" name="joinDate" className={inputCls} />
+                    <Field type="date" name="joinDate" className={`${inputCls} [color-scheme:dark] text-gray-400`}/>
                     <ErrorMessage
                       name="joinDate"
                       component="div"

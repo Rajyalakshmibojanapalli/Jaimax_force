@@ -9,11 +9,12 @@ import {
 } from "../../features/auth/loginApiSlice";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "../../features/auth/authSlice";
+import loginImg from "../../assets/images/image-log.png";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [forgotMode, setForgotMode] = useState(false);
 
   const navigate = useNavigate();
@@ -23,42 +24,49 @@ export default function LoginPage() {
   const [forgotPassword, { isLoading: sendingReset }] =
     useForgotPasswordMutation();
 
-  // --- LOGIN HANDLER ---
-  const handleLogin = async (e) => {
-  e.preventDefault();
-  try {
-    const res = await login({ email, password }).unwrap();
+  const isBusy = loggingIn || sendingReset;
 
-    if (res?.success === 1 && res?.data) {
-      const { accessToken, refreshToken, user } = res.data;
+  // --- Validation Schema ---
+  const validationSchema = Yup.object({
+    email: Yup.string()
+      .email("Invalid email address")
+      .required("Email is required"),
+    ...(forgotMode
+      ? {}
+      : {
+          password: Yup.string().required("Password is required"),
+        }),
+  });
 
-      // Save credentials
-      dispatch(setCredentials({ user, accessToken, refreshToken }));
-
-      // onfirm they are actually stored before routing
-      setTimeout(() => {
-        const storedUser = JSON.parse(localStorage.getItem("user"));
-        if (storedUser && storedUser.fullName) {
-          toast.success("Login successful!");
-          navigate("/dashboard");
-        } else {
-          toast.error("Failed to load profile. Please retry.");
-        }
-      }, 0); // short delay to allow React to re-render
-    } else {
-      toast.error(res?.message || "Login failed.");
-    }
-  } catch (err) {
-    toast.error(err?.data?.message || "Something went wrong");
-  }
-};
-
-
-  // --- FORGOT PASSWORD HANDLER ---
-  const handleForgotPassword = async (e) => {
-    e.preventDefault();
+  // --- Handle Login ---
+  const handleLogin = async (values) => {
     try {
-      const res = await forgotPassword(email).unwrap();
+      const res = await login(values).unwrap();
+      if (res?.success === 1 && res?.data) {
+        const { accessToken, refreshToken, user } = res.data;
+        dispatch(setCredentials({ user, accessToken, refreshToken }));
+
+        setTimeout(() => {
+          const storedUser = JSON.parse(localStorage.getItem("user"));
+          if (storedUser && storedUser.fullName) {
+            toast.success("Login successful!");
+            navigate("/dashboard");
+          } else {
+            toast.error("Failed to load profile. Please retry.");
+          }
+        }, 0);
+      } else {
+        toast.error(res?.message || "Login failed.");
+      }
+    } catch (err) {
+      toast.error(err?.data?.message || "Something went wrong");
+    }
+  };
+
+  // --- Handle Forgot Password ---
+  const handleForgotPassword = async (values) => {
+    try {
+      const res = await forgotPassword(values.email).unwrap();
       toast.success(res?.message || "Password reset link sent to your email.");
       setTimeout(() => setForgotMode(false), 1500);
     } catch (err) {
@@ -66,11 +74,15 @@ export default function LoginPage() {
     }
   };
 
-  const isBusy = loggingIn || sendingReset;
-
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-black text-white overflow-hidden font-sans px-4 sm:px-6 lg:px-12">
+    <div className="relative min-h-screen flex flex-col lg:flex-row bg-black text-white font-sans overflow-hidden">
       <ToastContainer />
+
+      {/* === Top Branding === */}
+      <div className="absolute top-4 left-6 text-2xl font-bold tracking-wider">
+        <span className="text-[#FFD700]">JAI</span>
+        <span className="text-white">MAX</span>
+      </div>
 
       {/* === Loader Overlay === */}
       <AnimatePresence>
@@ -96,125 +108,152 @@ export default function LoginPage() {
         )}
       </AnimatePresence>
 
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="w-full max-w-md sm:max-w-lg md:max-w-md bg-[#0f0f0f]/80 border border-[#FFD700]/20 rounded-2xl p-6 sm:p-8 md:p-10 shadow-[0_0_40px_rgba(255,215,0,0.1)]"
-      >
-        <div className="mb-6 sm:mb-8 text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-            {forgotMode ? "Forgot Password" : "Welcome Back"}
-          </h2>
-          <p className="text-xs sm:text-sm text-gray-400 leading-relaxed px-2">
-            {forgotMode
-              ? "Enter your registered email to receive the reset link"
-              : "Sign in to continue your Jaimax journey"}
-          </p>
-        </div>
+      {/* === LEFT IMAGE (Desktop ≥1024px only) === */}
+      <div className="hidden lg:flex w-1/2 h-screen items-center justify-center p-8">
+        <img
+          src={loginImg}
+          alt="Login Illustration"
+          className="w-full h-auto object-contain max-h-[90%]"
+        />
+      </div>
 
-        {/* === Login Form === */}
-        {!forgotMode && (
-          <form className="space-y-5 sm:space-y-6" onSubmit={handleLogin}>
-            <div>
-              <label className="block text-xs sm:text-sm font-medium mb-2 text-gray-300">
-                Email
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-gray-500" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 sm:pl-11 pr-4 py-2.5 sm:py-3 rounded-lg bg-[#1a1a1a] border border-[#333] text-white text-sm sm:text-base focus:border-[#FFD700]"
-                  placeholder="you@jaimax.com"
-                  required
-                />
-              </div>
-            </div>
+      {/* === RIGHT FORM === */}
+      <div className="flex w-full lg:w-1/2 items-center justify-center px-4 sm:px-6 md:px-8 py-8 sm:py-10 md:py-12">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="relative w-full max-w-md sm:max-w-lg md:max-w-md 
+             rounded-2xl p-6 sm:p-8 md:p-10
+             border border-[#FFD700]/25 md:mt-7 lg:mt-auto mt-20
+             bg-[#0f0f0f]/60 backdrop-blur-md
+             shadow-[0_4px_8px_rgba(0,0,0,0.2),_0_6px_20px_rgba(0,0,0,0.19)]
+             transition-all duration-500 ease-in-out overflow-hidden mx-auto my-auto"
+        >
+          <div className="mb-6 sm:mb-8 text-center mt-2">
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#FFD700] mb-2">
+              {forgotMode ? "Forgot Password" : "Welcome Back"}
+            </h2>
+            <p className="text-xs sm:text-sm text-white leading-relaxed px-2">
+              {forgotMode
+                ? "Enter your registered email to receive the reset link"
+                : "Sign in to continue your Jaimax journey"}
+            </p>
+          </div>
 
-            <div>
-              <label className="block text-xs sm:text-sm font-medium mb-2 text-gray-300">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-gray-500" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 sm:pl-11 pr-10 sm:pr-12 py-2.5 sm:py-3 rounded-lg bg-[#1a1a1a] border border-[#333] text-white text-sm sm:text-base focus:border-[#FFD700]"
-                  placeholder="••••••••"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#FFD700]"
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex justify-end text-xs sm:text-sm">
-              <button
-                type="button"
-                onClick={() => setForgotMode(true)}
-                className="text-[#FFD700] hover:text-[#FFD700]/80 font-medium"
-              >
-                Forgot Password?
-              </button>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loggingIn}
-              className="w-full py-2.5 sm:py-3 font-semibold text-black text-sm sm:text-base bg-gradient-to-r from-[#FFD700] to-[#FFC800] rounded-lg hover:from-[#FFC800] hover:to-[#FFD700] transition-all"
-            >
-              {loggingIn ? "Signing in..." : "Login"}
-            </button>
-          </form>
-        )}
-
-        {/* === Forgot Password Form === */}
-        {forgotMode && (
-          <form
-            className="space-y-5 sm:space-y-6"
-            onSubmit={handleForgotPassword}
+          {/* === FORM START === */}
+          <Formik
+            initialValues={{ email: "", password: "" }}
+            validationSchema={validationSchema}
+            onSubmit={(values) =>
+              forgotMode ? handleForgotPassword(values) : handleLogin(values)
+            }
           >
-            <div>
-              <label className="block text-xs sm:text-sm font-medium mb-2 text-gray-300">
-                Registered Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-[#1a1a1a] border border-[#333] text-white text-sm sm:text-base focus:border-[#FFD700]"
-                placeholder="you@jaimax.com"
-                required
-              />
-            </div>
+            {({ errors, touched }) => (
+              <Form className="space-y-5 sm:space-y-6">
+                {/* Email Field */}
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium mb-2 text-[#FFD700]">
+                    Email <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-gray-500" />
+                    <Field
+                      name="email"
+                      type="email"
+                      placeholder="you@jaimax.com"
+                      className={`w-full pl-10 sm:pl-11 pr-4 py-2.5 sm:py-3 rounded-lg bg-[#1a1a1a] border ${
+                        errors.email && touched.email
+                          ? "border-red-500"
+                          : "border-[#626161]"
+                      } text-white text-sm sm:text-base focus:border-[#FFD700]`}
+                    />
+                  </div>
+                  <ErrorMessage
+                    name="email"
+                    component="p"
+                    className="text-red-500 text-xs mt-1"
+                  />
+                </div>
 
-            <button
-              type="submit"
-              disabled={sendingReset}
-              className="w-full py-2.5 sm:py-3 bg-gradient-to-r from-[#FFD700] to-[#FFC800] text-black text-sm sm:text-base font-semibold rounded-lg hover:from-[#FFC800] hover:to-[#FFD700]"
-            >
-              {sendingReset ? "Sending..." : "Continue"}
-            </button>
+                {/* Password Field */}
+                {!forgotMode && (
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium mb-2 text-[#FFD700]">
+                      Password <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-gray-500" />
+                      <Field
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        className={`w-full pl-10 sm:pl-11 pr-10 sm:pr-12 py-2.5 sm:py-3 rounded-lg bg-[#1a1a1a] border ${
+                          errors.password && touched.password
+                            ? "border-red-500"
+                            : "border-[#626161]"
+                        } text-white text-sm sm:text-base focus:border-[#FFD700]`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#FFD700]"
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                    <ErrorMessage
+                      name="password"
+                      component="p"
+                      className="text-red-500 text-xs mt-1"
+                    />
+                  </div>
+                )}
 
-            <button
-              type="button"
-              onClick={() => setForgotMode(false)}
-              className="w-full py-2 text-xs sm:text-sm text-gray-400 hover:text-white"
-            >
-              Back to Login
-            </button>
-          </form>
-        )}
-      </motion.div>
+                {/* Forgot Password Button */}
+                {!forgotMode && (
+                  <div className="flex justify-end text-xs sm:text-sm">
+                    <button
+                      type="button"
+                      onClick={() => setForgotMode(true)}
+                      className="text-[#FFD700] hover:text-[#FFD700]/80 font-medium"
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
+                )}
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={isBusy}
+                  className="w-full py-2.5 sm:py-3 font-semibold text-black text-sm sm:text-base bg-gradient-to-r from-[#FFD700] to-[#FFC800] rounded-lg hover:from-[#FFC800] hover:to-[#FFD700] transition-all"
+                >
+                  {isBusy
+                    ? forgotMode
+                      ? "Sending..."
+                      : "Signing in..."
+                    : forgotMode
+                    ? "Continue"
+                    : "Login"}
+                </button>
+
+                {/* Back Button */}
+                {forgotMode && (
+                  <button
+                    type="button"
+                    onClick={() => setForgotMode(false)}
+                    className="w-full py-2 text-xs sm:text-sm text-gray-400 hover:text-white"
+                  >
+                    Back to Login
+                  </button>
+                )}
+              </Form>
+            )}
+          </Formik>
+          {/* === FORM END === */}
+        </motion.div>
+      </div>
     </div>
   );
 }

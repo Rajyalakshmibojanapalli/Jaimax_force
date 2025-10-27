@@ -1,15 +1,39 @@
-import { configureStore } from "@reduxjs/toolkit";
+import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import { apiSlice } from "./api/apiSlice";
 import authReducer from "../features/auth/authSlice";
 import profileReducer from "../features/profile/profileSlice";
+import attendanceReducer from "../features/attendance/attendanceSlice";
+import leavesReducer from "../features/leaves/leaveSlice";
+import logger from "redux-logger";
+import { setupListeners } from "@reduxjs/toolkit/query";
+import storage from "redux-persist/lib/storage";
+import { persistReducer, persistStore } from "redux-persist";
+
+const persistConfig = {
+  key: "root",
+  storage,
+  whitelist: ["auth", "profile", "attendance", "leaves"], 
+};
+
+const rootReducer = combineReducers({
+  [apiSlice.reducerPath]: apiSlice.reducer,
+  auth: authReducer,
+  profile: profileReducer,
+  attendance: attendanceReducer,
+  leaves: leavesReducer,
+});
+
+const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 export const store = configureStore({
-  reducer: {
-    [apiSlice.reducerPath]: apiSlice.reducer,
-    auth: authReducer,
-    profile: profileReducer,
-  },
+  reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(apiSlice.middleware),
+    getDefaultMiddleware({
+      serializableCheck: false, // required for redux-persist
+    }).concat(apiSlice.middleware),
   devTools: true,
 });
+
+// setupListeners(store.dispatch);
+
+export const persistor = persistStore(store);

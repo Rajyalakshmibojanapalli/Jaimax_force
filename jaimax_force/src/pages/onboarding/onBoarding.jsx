@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useVerifyUserQuery } from "../../features/onboarding/onboardingApiSlice";
+import {motion} from "framer-motion";
 
 export default function OnBoarding() {
   const [isVisible, setIsVisible] = useState(false);
@@ -44,29 +45,74 @@ export default function OnBoarding() {
     }
   }, [skipVerification, token, navigate]);
 
-  // Guards
   if (!token)
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center text-white">
-        <p>No token provided in the link.</p>
-      </div>
-    );
-
-  if (isLoading)
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center text-white">
-        <p>Verifying your invitation...</p>
-      </div>
-    );
-
-  if (isError)
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center text-white">
-        <p className="text-red-500 font-semibold">
-          Invalid or expired verification link.
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-black via-zinc-900 to-black flex flex-col items-center justify-center text-white text-center px-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="space-y-3"
+      >
+        <p className="text-2xl font-semibold bg-gradient-to-r from-red-400 to-pink-600 bg-clip-text text-transparent animate-pulse">
+          No Token Found
         </p>
-      </div>
-    );
+        <p className="text-zinc-400 text-sm">
+          The verification link seems incomplete or invalid.
+        </p>
+      </motion.div>
+    </div>
+  );
+
+if (isLoading)
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-black via-zinc-900 to-black flex flex-col items-center justify-center text-white text-center px-6">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="flex flex-col items-center space-y-4"
+      >
+        {/* Spinner */}
+        <div className="relative w-14 h-14">
+          <div className="absolute inset-0 rounded-full border-4 border-t-transparent border-[#FFD700] animate-spin"></div>
+          <div className="absolute inset-1 rounded-full bg-black"></div>
+        </div>
+
+        {/* Text */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ repeat: Infinity, duration: 1.5, repeatType: "reverse" }}
+          className="text-lg font-medium text-[#FFD700]"
+        >
+          Verifying your invitation...
+        </motion.p>
+      </motion.div>
+    </div>
+  );
+
+if (isError)
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-black via-zinc-900 to-black flex flex-col items-center justify-center text-white text-center px-6">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="space-y-3"
+      >
+        <p className="text-2xl font-semibold text-red-500 animate-pulse">
+          Invalid or Expired Link
+        </p>
+        <p className="text-zinc-400 text-sm">
+          Please check your email for a new invitation or contact support.
+        </p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-4 px-4 py-2 bg-red-600/30 hover:bg-red-600/50 text-sm font-medium rounded-lg backdrop-blur transition"
+        >
+          Retry
+        </button>
+      </motion.div>
+    </div>
+  );
 
   if (
     !skipVerification &&

@@ -116,7 +116,6 @@
 //       {/* Hero Section */}
 //       <div className="relative z-10 max-w-6xl mx-auto px-6 md:px-10 pt-28 sm:pt-32 pb-20">
 //         <div className="grid lg:grid-cols-2 gap-12 sm:gap-16 items-center min-h-[70vh] sm:min-h-[80vh]">
-//           {/* Left Content */}
 //           <div>
 //             <div
 //               className={`inline-flex items-center gap-2 mb-6 sm:mb-8 ${
@@ -204,7 +203,6 @@
 //             </div>
 //           </div>
 
-//           {/* Right Visual */}
 //           <div
 //             className={`relative flex justify-center items-center ${
 //               isVisible ? "animate-fadeInUp" : "opacity-0"
@@ -230,10 +228,8 @@
 //               <div className="absolute bottom-1/4 -right-6 sm:-right-8 w-14 sm:w-20 h-14 sm:h-20 border border-white/20"></div>
 //             </div>
 //           </div>
-//           {/* <AnimatedJ /> */}
 //         </div>
 
-//         {/* Feature Grid */}
 //         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-[#FFD700]/10 mt-16 sm:mt-20 border border-[#FFD700]/10">
 //           {[
 //             {
@@ -285,15 +281,295 @@
 //   );
 // }
 
-
-
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Menu, X } from "lucide-react";
 import LandingHero from "./LandingHero";
+import { StatsSection } from "./StatsSection";
+import { TeamSection } from "./TeamSection";
+import heroImage from "../../assets/images/28385.jpg";
+import { Mail, Phone, MapPin, Linkedin, Twitter, Instagram } from "lucide-react";
 
 export default function LandingPage() {
+  const [scrollY, setScrollY] = useState(0);
+  const [showContent, setShowContent] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
-    <div className="bg-black text-white min-h-screen">
-      <LandingHero />
-      {/* Keep other sections below */}
+    <div className="min-h-screen bg-black text-white relative overflow-hidden font-sans">
+      {/* === Step 1: Preloader === */}
+      {!showContent && (
+        <LandingHero onAnimationComplete={() => setShowContent(true)} />
+      )}
+
+      {/* === Step 2: Real Page === */}
+      {showContent && (
+        <>
+          {/* === NAVBAR === */}
+          <nav
+            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-700 ease-in ${
+              scrollY > 50 ? "bg-black/80 backdrop-blur-lg" : "bg-transparent"
+            }`}
+          >
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
+              <div className="flex justify-between items-center py-5 border-b border-[#FFD700]/10">
+                {/* Logo */}
+                <div className="text-2xl sm:text-3xl font-bold tracking-tight">
+                  <span className="text-white">JAI</span>
+                  <span className="text-[#FFD700]">MAX</span>
+                </div>
+
+                {/* Desktop Links */}
+                <div className="hidden md:flex gap-10 items-center">
+                  {["FEATURES", "SOLUTIONS", "ABOUT"].map((item) => (
+                    <a
+                      key={item}
+                      href="#"
+                      className="text-sm text-gray-400 hover:text-white transition-colors duration-300 tracking-wide"
+                    >
+                      {item}
+                    </a>
+                  ))}
+                  <button
+                    className="px-5 py-2.5 bg-[#FFD700] text-black text-sm font-semibold tracking-wide hover:bg-[#e1c839] rounded-full transition-colors duration-300"
+                    onClick={() => navigate("/login")}
+                  >
+                    GET STARTED
+                  </button>
+                </div>
+
+                {/* Mobile Hamburger */}
+                <button
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  className="md:hidden text-white"
+                >
+                  {menuOpen ? <X size={26} /> : <Menu size={26} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Mobile Menu Dropdown */}
+            {menuOpen && (
+              <div className="
+      fixed z-40 bg-black/100 backdrop-blur-lg md:hidden
+      top-0 right-0 w-[70%] sm:w-[60%] lg:w-[40%]
+      rounded-l-xl shadow-2xl p-6 sm:p-8
+      transition-all duration-300 ease-in-out
+      [@media(max-width:360px)]:p-4
+      [@media(max-width:360px)]:w-[85%]
+    ">
+                <div className="flex justify-end pt-1 ">
+                  <button
+                    onClick={() => setMenuOpen(false)}
+                    className="text-white"
+                  >
+                    <X size={30} />
+                  </button>
+                </div>
+
+                <div className="flex flex-col items-center justify-center mt-6 space-y-8 mb-5 ">
+                  {["FEATURES", "SOLUTIONS", "ABOUT"].map((item) => (
+                    <a
+                      key={item}
+                      href="#"
+                      className="text-gray-300 hover:text-[#FFD700] text-base tracking-wide"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      {item}
+                    </a>
+                  ))}
+                  <button
+                    className="px-6 py-3 bg-[#FFD700] text-black text-base font-semibold rounded-full hover:bg-[#e1c839] transition-all"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      navigate("/login");
+                    }}
+                  >
+                    Get Started
+                  </button>
+                </div>
+              </div>
+            )}
+          </nav>
+
+          {/* === HERO SECTION === */}
+          <section className="relative h-screen flex items-center justify-center text-center pt-24 sm:pt-28 md:pt-0">
+            {/* Background image */}
+            <div
+              className="absolute inset-0 bg-cover bg-center md:bg-top lg:bg-center"
+              style={{
+                backgroundImage: `url(${heroImage})`,
+                minHeight: "100vh",
+              }}
+            ></div>
+            {/* Dark overlay */}
+            <div className="absolute inset-0 bg-black/10 sm:bg-black/10"></div>
+
+            {/* Text content */}
+            <div className="relative z-10 px-4 sm:px-6 md:px-10 max-w-4xl mx-auto">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-tight mb-5 sm:mb-6">
+                <div className="text-white mb-1 sm:mb-2">Build Your</div>
+                <div className="text-[#FFD700]">Digital Future</div>
+              </h1>
+              <p className="text-sm sm:text-base md:text-lg text-gray-300 mb-8 leading-relaxed max-w-2xl mx-auto">
+                Jaimax delivers enterprise-grade technology solutions with
+                precision, reliability, and performance. Transform your business
+                with tools designed for scale.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button
+                  className="px-6 py-3 sm:px-8 sm:py-4 bg-[#FFD700] text-black font-semibold hover:bg-[#e1c839] rounded-full transition-all duration-300 text-sm sm:text-base"
+                  onClick={() => navigate("/login")}
+                >
+                  Get Started →
+                </button>
+                {/* <button className="px-6 py-3 sm:px-8 sm:py-4 border border-white/20 text-white rounded-md hover:border-white hover:bg-white/5 transition-all duration-300 text-sm sm:text-base">
+                  Schedule Demo
+                </button> */}
+              </div>
+            </div>
+          </section>
+
+          {/* === Additional Sections === */}
+          <StatsSection />
+          <TeamSection />
+
+          {/* Footer line */}
+          <footer className="relative bg-[#FFD700] text-black overflow-hidden">
+      {/* Top gradient divider */}
+      <div className="absolute top-0 left-0 right-0">
+        <div className="h-px bg-gradient-to-r from-transparent via-black/40 to-transparent"></div>
+      </div>
+
+      {/* Content */}
+      <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-10 py-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
+          {/* 1. Brand */}
+          <div>
+            <h3 className="text-2xl font-bold mb-3">
+              <span className="text-black">JAI</span>
+              <span className="text-white drop-shadow-md">MAX</span>
+            </h3>
+            <p className="text-black/80 text-sm leading-relaxed max-w-xs">
+              Empowering businesses through secure, scalable, and future-ready
+              blockchain technology.
+            </p>
+          </div>
+
+          {/* 2. Quick Links */}
+          <div>
+            <h4 className="font-semibold mb-3 text-black uppercase tracking-wide">
+              Quick Links
+            </h4>
+            <ul className="space-y-2 text-sm text-black/80">
+              {["About Us", "Solutions", "Careers", "Contact"].map((link) => (
+                <li key={link} className="relative group overflow-hidden">
+                  <a
+                    href="#"
+                    className="inline-block transition-all duration-300 group-hover:text-black font-medium"
+                  >
+                    {link}
+                  </a>
+                  {/* underline animation */}
+                  <span className="absolute left-0 bottom-0 w-0 h-[1.5px] bg-black transition-all duration-300 group-hover:w-16"></span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* 3. Contact */}
+          <div>
+            <h4 className="font-semibold mb-3 text-black uppercase tracking-wide">
+              Contact
+            </h4>
+            <ul className="space-y-3 text-sm text-black/80">
+              {[
+                { Icon: Mail, text: "support@jaimax.io" },
+                { Icon: Phone, text: "+91 98765 43210" },
+                { Icon: MapPin, text: "Hyderabad, India" },
+              ].map(({ Icon, text }, idx) => (
+                <li key={idx} className="flex items-center gap-2 group relative overflow-hidden">
+                  <Icon size={16} className="text-black flex-shrink-0" />
+                  <span className="transition-colors duration-300 group-hover:text-black font-medium">
+                    {text}
+                  </span>
+                  {/* left-to-right highlight */}
+                  <span className="absolute left-0 bottom-0 w-0 h-[1.5px] bg-black transition-all duration-300 group-hover:w-40"></span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* 4. Social Links */}
+          <div>
+            <h4 className="font-semibold mb-3 text-black uppercase tracking-wide">
+              Follow Us
+            </h4>
+            <div className="flex gap-4">
+              {/* LinkedIn */}
+              <a
+                href="#"
+                className="p-2 rounded-full border border-black/10 hover:bg-[#0A66C2] transition-all duration-300 hover:text-white"
+              >
+                <Linkedin
+                  size={18}
+                  className="transition-colors duration-300 "
+                />
+              </a>
+
+              {/* Twitter */}
+              <a
+                href="#"
+                className="p-2 rounded-full border border-black/10 hover:bg-[#1DA1F2] transition-all duration-300 hover:text-white"
+              >
+                <Twitter
+                  size={18}
+                  className="transition-colors duration-300 "
+                />
+              </a>
+
+              {/* Instagram */}
+              <a
+                href="#"
+                className="p-2 rounded-full border border-black/10 hover:bg-[#E1306C] transition-all duration-300 hover:text-white"
+              >
+                <Instagram
+                  size={18}
+                  className="transition-colors duration-300 "
+                />
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom divider and copyright */}
+        <div className="mt-12 pt-6 border-t border-black/20 text-center text-sm text-black/70">
+          © {new Date().getFullYear()} <span className="font-semibold text-black">Jaimax</span>. All rights reserved.
+        </div>
+      </div>
+    </footer>
+        </>
+      )}
     </div>
   );
 }
+
+
+// import LandingHero from "./LandingHero";
+
+// export default function LandingPage() {
+//   return (
+//     <div className="bg-black text-white min-h-screen">
+//       <LandingHero />
+//       {/* Keep other sections below */}
+//     </div>
+//   );
+// }

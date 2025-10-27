@@ -14,11 +14,9 @@ import {
 import { useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import { useUpdateRejectedSectionMutation } from "../../features/onboarding/onboardingApiSlice";
-import { useGetProfileQuery } from "../../features/profile/profileApiSlice";
 import { useSelector } from "react-redux";
 
 export default function OnboardingStatus() {
-  // const { data, isLoading, isError } = useGetProfileQuery();
   const profile = useSelector((state)=> state.profile.data);
   const isLoading = !profile;
   const [updateRejectedSection, { isLoading: isSubmitting }] =
@@ -170,7 +168,7 @@ export default function OnboardingStatus() {
   ];
 
   return (
-    <div className="flex flex-col flex-1 overflow-y-auto bg-[#0f0f0f] text-white px-4 sm:px-6 md:px-8 py-6 md:py-8">
+    <div className="flex flex-col flex-1 overflow-y-auto bg-[#0f0f0f] text-white px-4 sm:px-4 md:px-4 py-6 md:py-8">
       <ToastContainer />
       <h1 className="text-xl sm:text-2xl font-bold mb-6 text-[#FFD700] flex items-center gap-2">
         <User size={22} className="sm:size-24" /> Onboarding Progress
@@ -191,9 +189,9 @@ export default function OnboardingStatus() {
             } rounded-xl p-4 sm:p-6 mb-6 shadow-sm`}
           >
             <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-3 gap-2 sm:gap-0">
-              <div className="flex items-center gap-2 sm:gap-3">
+              <div className="flex items-center gap-2 sm:gap-3 text-[#FFD700]">
                 {icon}
-                <h2 className="text-base sm:text-lg font-semibold">
+                <h2 className="text-base sm:text-lg font-semibold text-[#FFD700]">
                   {i + 1}. {title}
                 </h2>
               </div>
@@ -205,10 +203,10 @@ export default function OnboardingStatus() {
               {key === "personal_info" && (
                 <>
                   <p>
-                    <b>Name:</b> {section?.firstName} {section?.lastName}
+                    <b className="text-gray-400">Name:</b> {section?.firstName} {section?.lastName}
                   </p>
                   <p>
-                    <b>Email:</b> {section?.email}
+                    <b className="text-gray-400">Email:</b> {section?.email}
                   </p>
                   <p>
                     <b>Phone:</b> {section?.phone}

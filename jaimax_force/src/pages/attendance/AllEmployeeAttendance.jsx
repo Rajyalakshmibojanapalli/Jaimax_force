@@ -1,8 +1,9 @@
-import { CalendarDays, Eye, Filter, RefreshCw } from "lucide-react";
+import { AlertTriangle, CalendarDays, Edit, Eye, Filter, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useGetAllAttendanceQuery } from "../../features/attendance/attendanceApiSlice";
+import UpdateAttendanceModal from "./UpdateAttendanceModal";
 
 // Simple debounce hook
 function useDebounce(value, delay = 600) {
@@ -43,6 +44,8 @@ export default function AllEmployeeAttendance() {
 
   const records = data?.data?.records || [];
 
+  const [selectedRecord, setSelectedRecord] = useState(null);
+
   // --- Helper: work hours formatting ---
   const formatWorkHours = (hours) => {
     if (!hours || hours <= 0) return "-";
@@ -74,6 +77,10 @@ export default function AllEmployeeAttendance() {
     }));
     toast.info("Showing all employees", { theme: "dark" });
   };
+
+  const handleUpdateEmployee = (record) =>{
+    setSelectedRecord(record);
+  }
 
   const handleRefresh = useCallback(() => {
     refetch();
@@ -240,7 +247,7 @@ export default function AllEmployeeAttendance() {
                   className="text-center py-12 text-red-400"
                 >
                   <div className="flex flex-col items-center gap-2">
-                    <span className="text-2xl">⚠️</span>
+                    <span className="text-2xl"><AlertTriangle size={30}/> </span>
                     <span>Failed to fetch records</span>
                   </div>
                 </td>
@@ -313,6 +320,18 @@ export default function AllEmployeeAttendance() {
                         <Eye size={14} /> View
                       </button>
                     </td>
+
+                    {/*update*/}
+                    <td className="p-3 sm:p-4 text-center">
+                      <button
+                        onClick={() =>
+                          handleUpdateEmployee(item)
+                        }
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FFD700]/15 text-[#FFD700] rounded-lg hover:bg-[#FFD700]/25 transition-all duration-200 text-xs font-semibold border border-[#FFD700]/30"
+                      >
+                        <Edit size={14} /> Update
+                      </button>
+                    </td>
                   </tr>
                 );
               })
@@ -326,6 +345,15 @@ export default function AllEmployeeAttendance() {
         <div className="mt-4 text-end text-sm text-gray-400">
           Showing <span className="text-[#FFD700] font-semibold">{records.length}</span> record{records.length !== 1 ? 's' : ''}
         </div>
+      )}
+
+
+      {selectedRecord && (
+        <UpdateAttendanceModal
+         isOpen = {!!selectedRecord}
+         onClose = {() =>setSelectedRecord(null)}
+         record = {selectedRecord}
+         />
       )}
     </div>
   );

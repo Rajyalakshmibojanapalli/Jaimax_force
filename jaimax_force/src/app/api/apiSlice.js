@@ -5,7 +5,7 @@ import { logout, setCredentials } from "../../features/auth/authSlice";
 // --- Base Query Configuration ---
 const baseQuery = fetchBaseQuery({
   baseUrl: import.meta.env.VITE_API_BASE_URL,
-  prepareHeaders: (headers, { endpoint }) => {
+  prepareHeaders: (headers) => {
     headers.set("Access-Control-Allow-Origin", "*");
     headers.set(
       "Access-Control-Allow-Methods",
@@ -13,12 +13,7 @@ const baseQuery = fetchBaseQuery({
     );
 
     const token = localStorage.getItem("accessToken");
-
-    // ✅ Only attach token if NOT calling the refresh-token endpoint
-    if (token && !endpoint?.includes("refresh-token")) {
-      headers.set("authorization", `Bearer ${token}`);
-    }
-
+    if (token) headers.set("authorization", `Bearer ${token}`);
     return headers;
   },
 });
@@ -27,8 +22,11 @@ const baseQuery = fetchBaseQuery({
 export const baseQueryWithReAuth = async (args, api, extraOptions) => {
   let result = await baseQuery(args, api, extraOptions);
 
-  // 🔁 Handle access token expiry
-  if (result?.error?.data?.status_code === 408 || result?.error?.status === 408) {
+  // Handle access token expiry
+  if (
+    result?.error?.data?.status_code === 408 ||
+    result?.error?.status === 408
+  ) {
     const refreshToken = localStorage.getItem("refreshToken");
 
     if (!refreshToken) {
@@ -38,7 +36,7 @@ export const baseQueryWithReAuth = async (args, api, extraOptions) => {
       return result;
     }
 
-    // 🔁 Try to get a new access token
+    // Try to get a new access token
     const refreshResult = await fetchBaseQuery({
       baseUrl: import.meta.env.VITE_API_BASE_URL,
     })(
@@ -53,7 +51,8 @@ export const baseQueryWithReAuth = async (args, api, extraOptions) => {
 
     if (refreshResult?.data?.data?.accessToken) {
       const newAccessToken = refreshResult.data.data.accessToken;
-      const newRefreshToken = refreshResult.data.data.refreshToken || refreshToken;
+      const newRefreshToken =
+        refreshResult.data.data.refreshToken || refreshToken;
 
       // Save new tokens
       localStorage.setItem("accessToken", newAccessToken);
@@ -61,7 +60,13 @@ export const baseQueryWithReAuth = async (args, api, extraOptions) => {
 
       // Update Redux credentials
       const user = JSON.parse(localStorage.getItem("user"));
-      api.dispatch(setCredentials({ user, accessToken: newAccessToken, refreshToken: newRefreshToken }));
+      api.dispatch(
+        setCredentials({
+          user,
+          accessToken: newAccessToken,
+          refreshToken: newRefreshToken,
+        })
+      );
 
       // Retry original request silently
       result = await baseQuery(args, api, extraOptions);
@@ -73,11 +78,12 @@ export const baseQueryWithReAuth = async (args, api, extraOptions) => {
     }
   }
 
-  // 🚫 Handle 401 Unauthorized (fallback)
+  // Handle 401 Unauthorized (fallback)
   const endpointUrl = typeof args === "string" ? args : args?.url || "";
 
   if (
-    (result?.error?.data?.status_code === 401 || result?.error?.status === 401) &&
+    (result?.error?.data?.status_code === 401 ||
+      result?.error?.status === 401) &&
     !endpointUrl.includes("/jaimaxforceauth/login") &&
     !endpointUrl.includes("/jaimaxforceauth/forgot-password") &&
     !endpointUrl.includes("/jaimaxforceauth/reset-password") &&
