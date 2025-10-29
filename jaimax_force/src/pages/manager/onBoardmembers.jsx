@@ -10,16 +10,23 @@ import {
   ChevronDown,
   ChevronUp,
   Clock,
+  Pen,
+  X,
+  Mail,
+  Search,
 } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { toast } from "react-toastify";
+import * as Yup from "yup";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import { toast, ToastContainer } from "../../features/helpers/Toaster";
 import {
   useCompleteEmployeeOnboardingMutation,
   useGetAllEmployeesQuery,
   useGetEmployeeByIdQuery,
   useVerifyEmployeeSectionMutation,
   useResendInvitationMutation,
+  useUpdateMailMutation,
 } from "../../features/onboarding/onboardingApiSlice";
 
 export default function OnboardMembers() {
@@ -35,6 +42,9 @@ export default function OnboardMembers() {
   const { user } = useSelector((state) => state.auth);
   const loggedEmployeeId = user?.employeeId;
   const role = user?.role?.toLowerCase();
+
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [selectedMember, setSelectedMember] = useState(null);
 
   // === Debounce search ===
   useEffect(() => {
@@ -66,39 +76,38 @@ export default function OnboardMembers() {
 
   // === Handlers ===
   const handleVerifySection = async (section, data, key = null) => {
-  try {
-    const sectionKey = key || section;
-    const remark = remarks[sectionKey] || "";
-    const payload = { data, isVerified: !remark, remarks: remark };
+    try {
+      const sectionKey = key || section;
+      const remark = remarks[sectionKey] || "";
+      const payload = { data, isVerified: !remark, remarks: remark };
 
-    await verifyEmployeeSection({
-      employeeId: selectedUser.employeeId,
-      section: sectionKey,
-      payload,
-    }).unwrap();
+      await verifyEmployeeSection({
+        employeeId: selectedUser.employeeId,
+        section: sectionKey,
+        payload,
+      }).unwrap();
 
-    toast.success(
-      remark
-        ? `${sectionKey} marked as Rejected`
-        : `${sectionKey} Verified Successfully`
-    );
+      toast.success(
+        remark
+          ? `${sectionKey} marked as Rejected`
+          : `${sectionKey} Verified Successfully`
+      );
 
-    // ✅ Auto-reset UI after success
-    setRemarks((prev) => {
-      const updated = { ...prev };
-      delete updated[sectionKey];
-      return updated;
-    });
+      // Auto-reset UI after success
+      setRemarks((prev) => {
+        const updated = { ...prev };
+        delete updated[sectionKey];
+        return updated;
+      });
 
-    // Optionally collapse section after action
-    setExpanded(null);
+      // Optionally collapse section after action
+      setExpanded(null);
 
-    refetch();
-  } catch (err) {
-    toast.error(err?.data?.message || "Failed to verify section");
-  }
-};
-
+      refetch();
+    } catch (err) {
+      toast.error(err?.data?.message || "Failed to verify section");
+    }
+  };
 
   const handleCompleteOnboarding = async () => {
     try {
@@ -126,6 +135,11 @@ export default function OnboardMembers() {
     } finally {
       setResendingId(null);
     }
+  };
+
+  const handleUpdateEmail = (member) => {
+    setSelectedMember(member);
+    setShowEmailModal(true);
   };
 
   // === Verify check ===
@@ -158,33 +172,38 @@ export default function OnboardMembers() {
 
   // === Render ===
   return (
-    <div className="flex flex-col flex-1 bg-[#0f0f0f] text-white p-2 md:p-2">
+    <div className="flex flex-col flex-1 bg-[#0f0f0f] text-white p-4 md:p-4">
       <h1 className="text-2xl font-bold mb-6 text-[#FFD700] flex items-center gap-2">
         <ClipboardCheck size={22} /> Onboarded Members
       </h1>
 
       {/* === Search === */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+<div className="lg:max-w-[50%] md:max-w-[50%] flex flex-row sm:flex-row sm:items-center sm:justify-start w-full mb-4 border border-[#3f3f3f] rounded-md focus-within:border-[#FFD700]/50">
+        <div className="p-2 flex flex-row items-center justify-center">
+        <Search size={18}/>
+        </div>
         <input
           type="text"
           placeholder="Search employee name or email..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="px-3 py-2 rounded-md bg-[#1a1a1a] border border-[#2a2a2a] text-white placeholder-gray-400 focus:outline-none focus:border-[#FFD700] w-full sm:w-72"
+          className="px-1 py-2 bg-[#1a1a1a] text-white placeholder-gray-400 focus:outline-none  w-full sm:w-72"
         />
       </div>
 
       {/* === Table === */}
       <div className="overflow-x-auto rounded-xl border border-[#2a2a2a] bg-[#1a1a1a] shadow-md">
         <table className="w-full text-sm">
-          <thead className="bg-[#222] text-[#FFD700]">
+          <thead className="bg-[#FFD700] text-black border-b-2 border-[#222]">
             <tr>
-              <th className="p-3 text-left">Employee ID</th>
-              <th className="p-3 text-left">Name</th>
-              <th className="p-3 text-left">Email</th>
-              <th className="p-3 text-left">Department</th>
-              <th className="p-3 text-left">Role</th>
-              <th className="p-3 text-center">Actions</th>
+              <th className="p-3 font-semibold text-left min-w-[130px]">Employee ID</th>
+              <th className="p-3 font-semibold text-left min-w-[130px]">Name</th>
+              <th className="p-3 font-semibold text-left">Email</th>
+              <th className="p-3 font-semibold text-left">Department</th>
+              <th className="p-3 font-semibold text-left min-w-[100px]">Role</th>
+              <th className="p-3 font-semibold text-center">View</th>
+              <th className="p-3 font-semibold text-center">Actions</th>
+              <th className="p-3 font-semibold text-center ">Update</th>
             </tr>
           </thead>
           <tbody>
@@ -215,26 +234,16 @@ export default function OnboardMembers() {
                     {m.authentication?.role || "N/A"}
                   </td>
 
-                  <td className="p-3 flex justify-center gap-2 flex-wrap">
+                  {/* === VIEW COLUMN === */}
+                  <td className="p-3 text-center">
                     {m.onboarding?.status === "completed" ? (
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-center gap-2">
                         <span className="text-green-400 font-semibold">
                           Completed
                         </span>
-                        {/* {role === "admin" && (
-                          <button
-                            onClick={() => setSelectedUser(m)}
-                            className="hidden sm:flex px-3 py-1 rounded-md bg-[#222] text-[#FFD700] hover:bg-[#333] text-sm"
-                            title="View Employee Details"
-                          >
-                            View
-                          </button>
-
-                        )} */}
                       </div>
                     ) : (
-                      <>
-                        {/* === REVIEW === */}
+                      <div className="flex items-center justify-center">
                         <button
                           onClick={() => {
                             if (m.employeeId === loggedEmployeeId)
@@ -254,9 +263,21 @@ export default function OnboardMembers() {
                           <Eye size={16} />
                           <span className="hidden sm:inline">Review</span>
                         </button>
+                      </div>
+                    )}
+                  </td>
 
-                        {/* === RESEND === */}
-                        {["hr", "admin"].includes(role) && (
+                  {/* === RESEND COLUMN === */}
+                  <td className="p-3 text-center">
+                    {m.onboarding?.status === "completed" ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <span className="text-green-400 font-semibold">
+                          Completed
+                        </span>
+                      </div>
+                    ) : (
+                      ["hr", "admin"].includes(role) && (
+                        <div className="flex items-center justify-center">
                           <button
                             onClick={() => handleResendInvitation(m)}
                             disabled={resendingId === m.employeeId}
@@ -278,8 +299,32 @@ export default function OnboardMembers() {
                                 : "Resend"}
                             </span>
                           </button>
-                        )}
-                      </>
+                        </div>
+                      )
+                    )}
+                  </td>
+
+                  {/* === Add email COLUMN === */}
+                  <td className="p-3 text-center">
+                    {m.onboarding?.status === "completed" ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <span className="text-green-400 font-semibold">
+                          Completed
+                        </span>
+                      </div>
+                    ) : (
+                      ["hr", "admin"].includes(role) && (
+                        <div className="flex items-center justify-center">
+                          <button
+                            onClick={() => handleUpdateEmail(m)}
+                            className="rounded-md font-semibold flex items-center justify-center gap-1 transition bg-[#FFD700] text-black hover:bg-[#ffe55c] px-3 py-2"
+                            title="Add Email"
+                          >
+                            <Mail size={15} />
+                            <span className="hidden sm:inline">Email</span>
+                          </button>
+                        </div>
+                      )
                     )}
                   </td>
                 </tr>
@@ -337,7 +382,124 @@ export default function OnboardMembers() {
           role={role}
         />
       )}
+
+      {showEmailModal && (
+        <div
+          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowEmailModal(false)}
+        >
+          <div
+            className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl w-full max-w-sm p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold text-[#FFD700]">
+                Update Employee Email
+              </h2>
+              <button
+                onClick={() => setShowEmailModal(false)}
+                className="text-gray-400 hover:text-[#FFD700]"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <UpdateEmailForm
+              member={selectedMember}
+              onClose={() => setShowEmailModal(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+function UpdateEmailForm({ member, onClose }) {
+  const [updateMail, { isLoading }] = useUpdateMailMutation();
+
+  const validationSchema = Yup.object({
+    email: Yup.string()
+      .email("Enter a valid email")
+      .required("Email is required"),
+  });
+
+  const initialValues = { email: "" };
+
+  const handleSubmit = async (values, { setSubmitting, resetForm }) => {
+    // console.log("member", member)
+    // console.log(values.email)
+    try {
+      const res = await updateMail({
+        id: member?._id || member?.id,
+        body: { newEmail: values.email },
+      }).unwrap();
+
+      toast.success(res?.message || "Email updated successfully");
+      resetForm();
+      onClose();
+    } catch (err) {
+      toast.error(err?.data?.message || "Failed to update email");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Formik
+      initialValues={initialValues}
+      validationSchema={validationSchema}
+      onSubmit={handleSubmit}
+    >
+      {({ isSubmitting }) => (
+        <Form className="space-y-4">
+          {/* Email Field */}
+          <div className="flex flex-col">
+            <label className="text text-gray-400 mb-1.5">
+              New Email Address
+            </label>
+            <Field
+              type="text"
+              name="email"
+              placeholder="e.g., name.surname@jaimax.com"
+              className="w-full bg-[#0f0f0f] border border-[#454545] rounded-lg px-3 py-2 text-sm text-white 
+                         focus:border-[#FFD700] focus:ring-1 focus:ring-[#FFD700] outline-none"
+            />
+            <ErrorMessage
+              name="email"
+              component="div"
+              className="text-xs text-red-400 my-2"
+            />
+            {/* Info Note */}
+            <p className="text-[12px] text-gray-400 mt-1">
+              <span className="font-bold text-white/60">Note:</span> The email
+              should follow one of these formats —{" "}
+              <span className="text-[#FFD700] font-medium">name.surname</span>{" "}
+              or{" "}
+              <span className="text-[#FFD700] font-medium">
+                name.surname@jaimax.com
+              </span>
+            </p>
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={isSubmitting || isLoading}
+            className="w-full bg-[#FFD700] text-black font-semibold py-2 rounded-lg hover:bg-[#e6c800] transition flex items-center justify-center gap-2"
+          >
+            {isSubmitting || isLoading ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                Updating...
+              </>
+            ) : (
+              "Update Email"
+            )}
+          </button>
+        </Form>
+      )}
+    </Formik>
   );
 }
 
@@ -449,9 +611,10 @@ function ReviewModal({
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50 px-2">
-      <div className="bg-[#121212] border border-[#333] rounded-2xl p-5 w-full max-w-5xl h-[90vh] overflow-y-auto shadow-xl relative">
+      <ToastContainer />
+      <div className="bg-[#121212] border border-[#333] rounded-2xl px-5 w-full max-w-5xl h-[90vh] overflow-y-auto shadow-xl relative">
         {/* Header */}
-        <div className="flex justify-between items-center mb-4 sticky top-0 bg-[#121212] pb-3 border-b border-[#333] z-10">
+        <div className="flex justify-between items-center mb-5 sticky top-0 bg-[#121212] p-3 border-b border-[#333] z-10">
           <h2 className="text-xl font-semibold text-[#FFD700] flex items-center gap-2">
             Reviewing:{" "}
             <span className="text-white">{selectedUser.fullName}</span>
@@ -493,7 +656,7 @@ function ReviewModal({
                   className={`bg-[#1a1a1a] border rounded-lg mb-4 transition ${
                     verified
                       ? "border-green-700/70"
-                      : data?.remarks
+                      : data?.remarks || data[0]?.remarks
                       ? "border-red-700/70"
                       : "border-[#2a2a2a]"
                   }`}
@@ -545,7 +708,7 @@ function ReviewModal({
                                         "_id",
                                         "expirydate",
                                         "uploadedat",
-                                        "documentnumber"
+                                        "documentnumber",
                                       ].some((ex) =>
                                         k.toLowerCase().includes(ex)
                                       )
@@ -707,41 +870,48 @@ function ReviewModal({
       </div>
 
       {confirmReject.open && (
-  <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-[100]">
-    <div className="bg-[#1a1a1a] border border-[#FFD700]/30 rounded-xl p-6 w-[90%] sm:w-[400px] text-center">
-      <h3 className="text-lg font-semibold text-[#FFD700] mb-3">
-        Confirm Rejection
-      </h3>
-      <p className="text-gray-300 mb-5">
-        Are you sure you want to reject this section?
-      </p>
-      <div className="flex justify-center gap-4">
-        <button
-          onClick={() => {
-            handleVerifySection(
-              confirmReject.sectionKey,
-              confirmReject.data,
-              confirmReject.sectionKey
-            );
-            setConfirmReject({ open: false, sectionKey: null, data: null });
-          }}
-          className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold"
-        >
-          Yes, Reject
-        </button>
-        <button
-          onClick={() =>
-            setConfirmReject({ open: false, sectionKey: null, data: null })
-          }
-          className="px-5 py-2 bg-[#333] hover:bg-[#444] text-gray-200 rounded-lg font-semibold"
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-[100]">
+          <div className="bg-[#1a1a1a] border border-[#FFD700]/30 rounded-xl p-6 w-[90%] sm:w-[400px] text-center">
+            <h3 className="text-lg font-semibold text-[#FFD700] mb-3">
+              Confirm Rejection
+            </h3>
+            <p className="text-gray-300 mb-5">
+              Are you sure you want to reject this section?
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => {
+                  handleVerifySection(
+                    confirmReject.sectionKey,
+                    confirmReject.data,
+                    confirmReject.sectionKey
+                  );
+                  setConfirmReject({
+                    open: false,
+                    sectionKey: null,
+                    data: null,
+                  });
+                }}
+                className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold"
+              >
+                Yes, Reject
+              </button>
+              <button
+                onClick={() =>
+                  setConfirmReject({
+                    open: false,
+                    sectionKey: null,
+                    data: null,
+                  })
+                }
+                className="px-5 py-2 bg-[#333] hover:bg-[#444] text-gray-200 rounded-lg font-semibold"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

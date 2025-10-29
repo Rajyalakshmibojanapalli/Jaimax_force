@@ -565,7 +565,7 @@ import {
 } from "lucide-react";
 import { useDispatch, useSelector, useStore } from "react-redux";
 import { ResponsiveContainer, AreaChart, Area } from "recharts";
-import { toast, ToastContainer } from "react-toastify";
+import { toast, ToastContainer } from "../../features/helpers/Toaster";
 import "react-toastify/dist/ReactToastify.css";
 import { useGetProfileQuery } from "../../features/profile/profileApiSlice";
 import { setProfileData } from "../../features/profile/profileSlice";
@@ -583,6 +583,8 @@ import {
   setLeaveUser,
 } from "../../features/leaves/leaveSlice";
 import { motion } from "framer-motion";
+import { useGetHolidaysQuery } from "../../features/holidays/holidayApiSlice";
+import { setHolidaysData } from "../../features/holidays/holidaySlice";
 
 export default function Dashboard() {
   const user = useSelector((state) => state.auth.user);
@@ -610,7 +612,7 @@ export default function Dashboard() {
   // ---------------- Profile ----------------
   const profile = useSelector((state) => state.profile.data);
   const lastFetched = useSelector((state) => state.profile.lastFetched);
-  const shouldRefetch = !lastFetched || Date.now() - lastFetched > 1 * 60 * 60 * 1000;
+  const shouldRefetch = !lastFetched || Date.now() - lastFetched > 60 * 1000;
   const shouldFetchNow = !profile || shouldRefetch;
 
   const { data, isSuccess, refetch: profileRefech, isUninitialized: profileIntialisation } = useGetProfileQuery(undefined, {
@@ -626,7 +628,7 @@ export default function Dashboard() {
 
    useEffect(() => {
     if (!rehydrated || profileIntialisation) return;
-    const interval = setInterval(() => profileRefech(), 1 * 60 * 60 * 1000);
+    const interval = setInterval(() => profileRefech(), 60 * 1000);
     return () => clearInterval(interval);
   }, [rehydrated, profileRefech, profileIntialisation]);
 
@@ -670,7 +672,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!rehydrated || isUninitialized) return;
-    const interval = setInterval(() => refetchAttendance(), 12 * 60 * 60 * 1000);
+    const interval = setInterval(() => refetchAttendance(), 1 * 60 * 60 * 1000);
     return () => clearInterval(interval);
   }, [rehydrated, refetchAttendance, isUninitialized]);
 
@@ -685,17 +687,17 @@ export default function Dashboard() {
     if (user?.id) dispatch(setLeaveUser(user.id));
   }, [user?.id, dispatch]);
 
-  // Refetch condition (12 hours)
-  const REFRESH_INTERVAL = 12 * 60 * 60 * 1000;
+  // Refetch condition (1 hour)
+  const REFRESH_INTERVAL = 60 * 1000;
   const shouldRefetchAll =
     !lastFetchedLeaves.allLeaves ||
-    Date.now() - lastFetched.allLeaves > REFRESH_INTERVAL;
+    Date.now() - lastFetched?.allLeaves > REFRESH_INTERVAL;
   const shouldRefetchSummary =
     !lastFetchedLeaves.summary ||
-    Date.now() - lastFetched.summary > REFRESH_INTERVAL;
+    Date.now() - lastFetched?.summary > REFRESH_INTERVAL;
   const shouldRefetchBalance =
     !lastFetchedLeaves.balance ||
-    Date.now() - lastFetched.balance > REFRESH_INTERVAL;
+    Date.now() - lastFetched?.balance > REFRESH_INTERVAL;
 
   // Queries
   const {
@@ -741,14 +743,14 @@ export default function Dashboard() {
       dispatch(setLeaveBalance(balanceData.data));
   }, [balanceSuccess, balanceData, dispatch]);
 
-  // Background re-fetch every 12 hours (silent)
+  // Background re-fetch every 1 hour (silent)
   useEffect(() => {
   if (isAllUninit && isSummaryUninit && isBalanceUninit) return;
   const interval = setInterval(() => {
     refetchAllLeaves();
     refetchSummary();
     refetchBalance();
-  }, 12 * 60 * 60 * 1000);
+  }, 60 * 1000);
   return () => clearInterval(interval);
 }, [
   refetchAllLeaves,
@@ -759,6 +761,45 @@ export default function Dashboard() {
   isBalanceUninit,
 ]);
 
+// console.log(allLeavesData)
+
+//------------------ holidays ------------------------
+
+const holidays = useSelector((state) => state.holidays);
+const lastHolidaysFetched = useSelector((state) => state.holidays.lastFetched);
+
+const currentYear = now.getFullYear();
+// console.log(currentYear);
+const shouldRefetchHolidays =
+  !lastHolidaysFetched || Date.now() - lastHolidaysFetched > 1 * 60 * 60 * 1000;
+const shouldFetchHolidaysNow = !holidays || shouldRefetchHolidays;
+
+const {
+  data: holidaysData,
+  isSuccess: holidaysSuccess,
+  refetch: refetchHolidays,
+  isUninitialized: holidaysUninitialized,
+} = useGetHolidaysQuery(currentYear, {
+  skip: !shouldFetchHolidaysNow,
+  refetchOnMountOrArgChange: false,
+  refetchOnFocus: true,
+  refetchOnReconnect: true,
+});
+
+useEffect(() => {
+  if (holidaysSuccess && holidaysData?.data) {
+    dispatch(setHolidaysData(holidaysData.data));
+  }
+}, [holidaysSuccess, holidaysData, dispatch]);
+
+// Silent background refetch every 1h
+useEffect(() => {
+  if (!rehydrated || holidaysUninitialized) return;
+  const interval = setInterval(() => refetchHolidays(), 1 * 60 * 60 * 1000);
+  return () => clearInterval(interval);
+}, [rehydrated, refetchHolidays, holidaysUninitialized]);
+
+// console.log(holidays);
 
   // ---------------- Time & Greeting ----------------
  useEffect(() => {

@@ -2,10 +2,11 @@
 import { Field, FieldArray, Form, Formik } from "formik";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
+import { toast, ToastContainer } from "../../features/helpers/Toaster";
 import "react-toastify/dist/ReactToastify.css";
 import * as Yup from "yup";
 import { useCompleteOnboardingMutation } from "../../features/onboarding/onboardingApiSlice";
+import {Eye, EyeOff} from "lucide-react";
 
 export default function SubmitFiles() {
   const { selected } = useParams(); // fresher | experienced
@@ -19,36 +20,39 @@ export default function SubmitFiles() {
 
   const [formikValues, setFormikValues] = useState({});
 
+  const [showTemp, setShowTemp] = useState(false);
+const [showNew, setShowNew] = useState(false);
+
+
   // LocalStorage Helpers
   const STORAGE_KEY = "onboardingStepData";
 
- const saveToLocal = (step, values) => {
-  try {
-    const clone = JSON.parse(JSON.stringify(values));
+  const saveToLocal = (step, values) => {
+    try {
+      const clone = JSON.parse(JSON.stringify(values));
 
-    if (clone.documents) {
-      clone.documents.forEach((doc) => {
-        delete doc.file;
-        delete doc.fileData;
-      });
+      if (clone.documents) {
+        clone.documents.forEach((doc) => {
+          delete doc.file;
+          delete doc.fileData;
+        });
+      }
+
+      // Retrieve previously saved data
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+
+      // Merge old and new data so previous step info stays
+      const updated = {
+        ...saved,
+        [step]: { ...saved[step], ...clone },
+        currentStep: step,
+      };
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    } catch (err) {
+      console.warn("Failed to save step data:", err);
     }
-
-    // Retrieve previously saved data
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-
-    // Merge old and new data so previous step info stays
-    const updated = {
-      ...saved,
-      [step]: { ...saved[step], ...clone },
-      currentStep: step,
-    };
-
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  } catch (err) {
-    console.warn("Failed to save step data:", err);
-  }
-};
-
+  };
 
   const loadFromLocal = () => {
     try {
@@ -232,10 +236,11 @@ export default function SubmitFiles() {
       .of(Yup.string().trim().required("Skill is required"))
       .min(1, "At least one skill is required")
       .test(
-        "not-empty",
-        "Please enter at least one valid skill",
-        (arr) => arr && arr.length && arr.some((v) => v.trim() !== "")
-      ),
+  "not-empty",
+  "Please enter at least one valid skill",
+  (arr) => Array.isArray(arr) && arr.some((v) => typeof v === "string" && v.trim() !== "")
+)
+
   });
 
   const getDocumentsSchema = (educationArray) => {
@@ -476,7 +481,7 @@ export default function SubmitFiles() {
             const documentsData = [];
 
             for (const doc of values.documents || []) {
-              // 🧩 normalize invalid type names before sending
+              // normalize invalid type names before sending
               let normalizedType = doc.type;
               let subType = doc.subType || "";
 
@@ -551,8 +556,18 @@ export default function SubmitFiles() {
         setStep((s) => s + 1);
       }
     } catch (err) {
-      console.error(err);
-      toast.error(err?.data?.message || `Failed to save step ${step}`);
+      // Handle validation errors
+      const validationError = err?.data?.data?.errors?.[0];
+      // console.log(err?.data?.data)
+      const backendMessage = err?.data?.message;
+
+      if (validationError) {
+        toast.error(validationError);
+      } else if (backendMessage) {
+        toast.error(backendMessage);
+      } else {
+        toast.error("Something went wrong!");
+      }
     }
   };
 
@@ -984,11 +999,11 @@ export default function SubmitFiles() {
                               className={inputCls}
                               onChange={(e) => {
                                 const v = e.target.value;
-                                if (/^[A-Za-z0-9 ,.-]*$/.test(v))
+                                if (/^[A-Za-z0-9 /,.-]*$/.test(v))
                                   form.setFieldValue(
                                     "street",
                                     v
-                                      .trim()
+                                      // .trim()
                                       .replace(/\b\w/g, (c) => c.toUpperCase())
                                   );
                               }}
@@ -1429,9 +1444,15 @@ export default function SubmitFiles() {
                 {/* STEP 6: Education */}
                 {step === 6 && (
                   <div className={`${cardBase} ${activeCard}`}>
-                    <h3 className="text-lg sm:text-xl font-bold mb-6 text-[#FFD700]">
+                    <h3 className="text-lg sm:text-xl font-bold mb-1 text-[#FFD700]">
                       Education Details
                     </h3>
+                    <p class="text-sm text-gray-400 mt-2 mb-4">
+                      <span class="font-medium text-[#FFD700]">Note:</span> If a
+                      required field is not applicable or data is unavailable,
+                      please enter <strong>N/A</strong>.
+                    </p>
+
                     <FieldArray
                       name="education"
                       render={(arrayHelpers) => (
@@ -1512,11 +1533,30 @@ export default function SubmitFiles() {
                                     Field of Study{" "}
                                     <span className="text-red-400">*</span>
                                   </label>
-                                  <Field
-                                    name={`education.${i}.fieldOfStudy`}
-                                    placeholder="e.g., Science, CSE, etc."
-                                    className={inputCls}
-                                  />
+
+                                  <Field name={`education.${i}.fieldOfStudy`}>
+                                    {({ field, form }) => (
+                                      <input
+                                        {...field}
+                                        placeholder="e.g., Science, CSE, etc."
+                                        className={inputCls}
+                                        onChange={(e) => {
+                                          const v = e.target.value;
+                                          if (/^[A-Za-z / ]*$/.test(v)) {
+                                            form.setFieldValue(
+                                              `education.${i}.fieldOfStudy`,
+                                              v
+                                                .trimStart()
+                                                .replace(/\b\w/g, (c) =>
+                                                  c.toUpperCase()
+                                                ) // capitalize each word
+                                            );
+                                          }
+                                        }}
+                                      />
+                                    )}
+                                  </Field>
+
                                   {touched.education?.[i]?.fieldOfStudy &&
                                     errors.education?.[i]?.fieldOfStudy && (
                                       <div className={errorCls}>
@@ -1566,11 +1606,25 @@ export default function SubmitFiles() {
                                     Grade/Percentage{" "}
                                     <span className="text-red-400">*</span>
                                   </label>
-                                  <Field
-                                    name={`education.${i}.grade`}
-                                    placeholder="e.g., 85%, 8.5 CGPA, A"
-                                    className={inputCls}
-                                  />
+                                  <Field name={`education.${i}.grade`}>
+                                    {({ field, form }) => (
+                                      <input
+                                        {...field}
+                                        placeholder="e.g., 85%, 8.5, 92.3%"
+                                        className={inputCls}
+                                        onChange={(e) => {
+                                          const v = e.target.value;
+                                          // allow only digits, dot, and percentage
+                                          if (/^[0-9.%]*$/.test(v)) {
+                                            form.setFieldValue(
+                                              `education.${i}.grade`,
+                                              v
+                                            );
+                                          }
+                                        }}
+                                      />
+                                    )}
+                                  </Field>
                                   {touched.education?.[i]?.grade &&
                                     errors.education?.[i]?.grade && (
                                       <div className={errorCls}>
@@ -1847,6 +1901,10 @@ export default function SubmitFiles() {
                           {values.skills.map((skill, i) => (
                             <div key={i} className="flex gap-3 mb-3">
                               <div className="flex-1">
+                                <label className="block text-sm font-medium text-gray-300 mb-1">
+  Skill {i + 1} {i === 0 && <span className="text-red-400">*</span>}
+</label>
+
                                 <Field
                                   name={`skills.${i}`}
                                   placeholder={`Skill ${i + 1}`}
@@ -1938,20 +1996,20 @@ export default function SubmitFiles() {
                           PAN Card <span className="text-red-400">*</span>
                         </li>
                         {values.education && values.education.length > 0 ? (
-      values.education.map(
-        (edu, idx) =>
-          edu.degree && (
-            <li key={idx}>
-              {edu.degree} Certificate{" "}
-              <span className="text-red-400">*</span>
-            </li>
-          )
-      )
-    ) : (
-      <li className="text-gray-500 italic">
-        No education details added yet.
-      </li>
-    )}
+                          values.education.map(
+                            (edu, idx) =>
+                              edu.degree && (
+                                <li key={idx}>
+                                  {edu.degree} Certificate{" "}
+                                  <span className="text-red-400">*</span>
+                                </li>
+                              )
+                          )
+                        ) : (
+                          <li className="text-gray-500 italic">
+                            No education details added yet.
+                          </li>
+                        )}
 
                         {isExperienced && (
                           <>
@@ -2199,85 +2257,113 @@ export default function SubmitFiles() {
                   </div>
                 )}
 
-                {/* STEP 10: Password */}
-                {((step === 9 && !isExperienced) ||
-                  (step === 10 && isExperienced)) && (
-                  <div className={`${cardBase} ${activeCard}`}>
-                    <h3 className="text-lg sm:text-xl font-bold mb-6 text-[#FFD700]">
-                      Set Your Password
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                      <div>
-                        <label className={labelCls}>
-                          Temporary Password{" "}
-                          <span className="text-red-400">*</span>
-                        </label>
-                        <Field
-                          type="password"
-                          name="temporaryPassword"
-                          placeholder="From your email"
-                          className={inputCls}
-                        />
-                        <ErrorMessage
-                          name="temporaryPassword"
-                          formik={formik}
-                        />
-                      </div>
+{/* STEP 10: Password */}
+{((step === 9 && !isExperienced) || (step === 10 && isExperienced)) && (
+  <div className={`${cardBase} ${activeCard}`}>
+    <h3 className="text-lg sm:text-xl font-bold mb-2 text-[#FFD700]">
+      Set Your Password
+    </h3>
 
-                      <div>
-                        <label className={labelCls}>
-                          New Password <span className="text-red-400">*</span>
-                        </label>
-                        <Field
-                          type="password"
-                          name="newPassword"
-                          placeholder="Min 6 characters"
-                          className={inputCls}
-                        />
-                        <ErrorMessage name="newPassword" formik={formik} />
-                      </div>
-                    </div>
+    {/* 🟡 Notes section (moved to top) */}
+    <p className="text-[12px] text-gray-400 mb-5 leading-relaxed">
+      <span className="text-[#FFD700] font-semibold">Note:</span> <br /> 
+      1. Your{" "}
+      <span className="text-white/80 font-medium">temporary password</span> is
+      provided in your onboarding email. <br />
+      2. <span className="text-white/80 font-semibold"> Password must contain</span>{" "}
+      an uppercase letter, lowercase letter, number, and special character.
+    </p>
 
-                    <div className="flex flex-col sm:flex-row justify-between gap-3 pt-6">
-                      <button
-                        type="button"
-                        onClick={goBack}
-                        className="w-full sm:w-auto px-6 sm:px-8 py-3 border border-[#FFD700]/40 text-gray-300 rounded-lg hover:border-[#FFD700] transition"
-                      >
-                        ← Back
-                      </button>
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          if (isSubmittingStep || isLoading) return;
-                          setIsSubmittingStep(true);
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+      {/* Temporary Password */}
+      <div className="relative ">
+        <label className={labelCls}>
+          Temporary Password <span className="text-red-400">*</span>
+        </label>
+        <div className="flex items-center">
+        <Field
+          type={showTemp ? "text" : "password"}
+          name="temporaryPassword"
+          placeholder="From your email"
+          className={inputCls}
+        />
+        {/* 👁 Toggle Eye */}
+        <button
+          type="button"
+          onClick={() => setShowTemp((p) => !p)}
+          className="absolute right-3 text-gray-400 hover:text-[#FFD700] transition"
+        >
+          {showTemp ? <EyeOff size={18} /> : <Eye size={18} />}
+        </button>
+        </div>
+        <ErrorMessage name="temporaryPassword" formik={formik} />
+      </div>
 
-                          const valid = await formik.validateForm();
-                          if (Object.keys(valid).length) {
-                            toast.error(
-                              "Please fill all required fields correctly."
-                            );
-                            setIsSubmittingStep(false);
-                            return;
-                          }
+      {/* New Password */}
+      <div className="relative">
+        <label className={labelCls}>
+          New Password <span className="text-red-400">*</span>
+        </label>
+        <div className="flex items-center">
+        <Field
+          type={showNew ? "text" : "password"}
+          name="newPassword"
+          placeholder="Min 6 characters"
+          className={inputCls}
+        />
+        {/* 👁 Toggle Eye */}
+        <button
+          type="button"
+          onClick={() => setShowNew((p) => !p)}
+          className="absolute right-3 text-gray-400 hover:text-[#FFD700] transition"
+        >
+          {showNew ? <EyeOff size={18} /> : <Eye size={18} />}
+        </button>
+        </div>
+        <ErrorMessage name="newPassword" formik={formik} />
+      </div>
+    </div>
 
-                          await handleSubmitStep(values);
-                          setIsSubmittingStep(false);
-                        }}
-                        disabled={isSubmittingStep || isLoading}
-                        className={`px-10 py-3 bg-[#FFD700] text-black font-bold rounded-lg transition ${
-                          isSubmittingStep || isLoading
-                            ? "opacity-60 cursor-not-allowed"
-                            : "hover:bg-[#FFC800]"
-                        }`}
-                      >
-                        {isSubmittingStep || isLoading
-                          ? "Submitting..."
-                          : "Complete Onboarding"}
-                      </button>
-                    </div>
-                  </div>
-                )}
+    <div className="flex flex-col sm:flex-row justify-between gap-3 pt-6">
+      <button
+        type="button"
+        onClick={goBack}
+        className="w-full sm:w-auto px-6 sm:px-8 py-3 border border-[#FFD700]/40 text-gray-300 rounded-lg hover:border-[#FFD700] transition"
+      >
+        ← Back
+      </button>
+      <button
+        type="button"
+        onClick={async () => {
+          if (isSubmittingStep || isLoading) return;
+          setIsSubmittingStep(true);
+
+          const valid = await formik.validateForm();
+          if (Object.keys(valid).length) {
+            toast.error("Please fill all required fields correctly.");
+            setIsSubmittingStep(false);
+            return;
+          }
+
+          await handleSubmitStep(values);
+          setIsSubmittingStep(false);
+        }}
+        disabled={isSubmittingStep || isLoading}
+        className={`px-10 py-3 bg-[#FFD700] text-black font-bold rounded-lg transition ${
+          isSubmittingStep || isLoading
+            ? "opacity-60 cursor-not-allowed"
+            : "hover:bg-[#FFC800]"
+        }`}
+      >
+        {isSubmittingStep || isLoading
+          ? "Submitting..."
+          : "Complete Onboarding"}
+      </button>
+    </div>
+  </div>
+)}
+
+
               </Form>
             );
           }}

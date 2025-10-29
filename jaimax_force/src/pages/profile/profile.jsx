@@ -200,9 +200,11 @@ export default function Profile() {
                   icon={<MapPin size={16} />}
                   label="Address"
                   value={
-                    `${personal.address?.street}, ${personal.address?.city}, ${personal.address?.state} - ${personal.address?.pincode}` ||
-                    "N/A"
+                    personal.address
+                      ? `${personal.address.street}\n${personal.address.city}\n${personal.address.state} - ${personal.address.pincode}`
+                      : "N/A"
                   }
+                  className="whitespace-pre-line"
                 />
                 <InfoCard
                   icon={<MapPin size={16} />}
@@ -501,10 +503,12 @@ function Section({ title, icon, children }) {
 
 function InfoCard({ icon, label, value, className = "" }) {
   return (
-    <div className="p-4 rounded-xl bg-black border border-[#FFD700]/30 hover:border-[#FFD700]/40 transition">
-      <div className={`flex items-center gap-2 text-gray-400 mb-2 ${className}`}>
+    <div
+      className={`p-4 rounded-xl bg-black border border-[#FFD700]/30 hover:border-[#FFD700]/40 transition w-full`}
+    >
+      <div className={`flex items-center gap-2 text-gray-400 mb-2`}>
         {icon}
-        <span className={`text-xs font-medium uppercase tracking-wider ${className}`}>
+        <span className={`text-xs font-medium uppercase tracking-wider`}>
           {label}
         </span>
       </div>

@@ -281,23 +281,21 @@ import { Loader2, X } from "lucide-react";
 export default function UpdateAttendanceModal({ isOpen, onClose, record }) {
   const [updateAttendance, { isLoading }] = useUpdateAttendanceMutation();
 
-  // Helper to extract time from UTC string and convert to local time
+  // Helper to extract time (HH:MM) from ISO string
   const extractTime = (isoString) => {
     if (!isoString) return "";
     const date = new Date(isoString);
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
     return `${hours}:${minutes}`;
   };
 
-  // Helper to extract date from the attendance date field
+  // Helper to extract date (YYYY-MM-DD)
   const extractDate = (isoString) => {
     if (!isoString) return "";
-    // Extract just the date part (YYYY-MM-DD)
-    return isoString.split('T')[0];
+    return isoString.split("T")[0];
   };
 
-  // Use the attendance date field for the date, not the checkIn/checkOut time
   const attendanceDate = extractDate(record?.date);
   const checkInTime = extractTime(record?.checkIn?.time);
   const checkOutTime = extractTime(record?.checkOut?.time);
@@ -306,104 +304,47 @@ export default function UpdateAttendanceModal({ isOpen, onClose, record }) {
     status: record?.status || "",
     checkInDate: attendanceDate,
     checkInTime: checkInTime,
-    checkInCoordinates:
-      record?.checkIn?.location?.coordinates?.join(",") || "",
     checkOutDate: attendanceDate,
     checkOutTime: checkOutTime,
-    checkOutCoordinates:
-      record?.checkOut?.location?.coordinates?.join(",") || "",
-    totalBreakDuration: record?.totalBreakDuration || "",
-    breaks: record?.breaks || "",
-    isLate: record?.isLate || false,
-    isEarlyLeave: record?.isEarlyLeave || false,
-    lateBy: record?.lateBy || "",
-    earlyBy: record?.earlyBy || "",
     workHours: record?.workHours || "",
-    productiveHours: record?.productiveHours || "",
-    overtime: record?.overtime || "",
-    remarks: record?.remarks || "",
+    remarks: "", // ✅ Always empty for every new update
   };
 
   const validationSchema = Yup.object({
     remarks: Yup.string().required("Remarks are mandatory for any update"),
   });
 
-  // console.log(record, record?._id);
-
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
       const payload = {};
-      
+
       if (values.status) payload.status = values.status;
 
-      // Build checkIn with separate date and time
-      if (values.checkInDate || values.checkInTime || values.checkInCoordinates) {
-        payload.checkIn = {};
-        if (values.checkInDate && values.checkInTime) {
-          // Parse date and time components
-          const [year, month, day] = values.checkInDate.split("-").map(Number);
-          const [hours, minutes] = values.checkInTime.split(":").map(Number);
-          
-          // Create date in local timezone and convert to UTC
-          const localDateTime = new Date(year, month - 1, day, hours, minutes, 0);
-          payload.checkIn.time = localDateTime.toISOString();
-          
-          // console.log("Local time selected:", values.checkInDate, values.checkInTime);
-          // console.log("Converted to UTC:", payload.checkIn.time);
-        }
-        if (values.checkInCoordinates) {
-          const coords = values.checkInCoordinates
-            .split(",")
-            .map((v) => parseFloat(v.trim()));
-          payload.checkIn.location = { type: "Point", coordinates: coords };
-        }
+      // Build check-in
+      if (values.checkInDate && values.checkInTime) {
+        const [year, month, day] = values.checkInDate.split("-").map(Number);
+        const [hours, minutes] = values.checkInTime.split(":").map(Number);
+        const localDateTime = new Date(year, month - 1, day, hours, minutes, 0);
+        payload.checkIn = { time: localDateTime.toISOString() };
       }
 
-      // Build checkOut with separate date and time
-      if (values.checkOutDate || values.checkOutTime || values.checkOutCoordinates) {
-        payload.checkOut = {};
-        if (values.checkOutDate && values.checkOutTime) {
-          // Parse date and time components
-          const [year, month, day] = values.checkOutDate.split("-").map(Number);
-          const [hours, minutes] = values.checkOutTime.split(":").map(Number);
-          
-          // Create date in local timezone and convert to UTC
-          const localDateTime = new Date(year, month - 1, day, hours, minutes, 0);
-          payload.checkOut.time = localDateTime.toISOString();
-        }
-        if (values.checkOutCoordinates) {
-          const coords = values.checkOutCoordinates
-            .split(",")
-            .map((v) => parseFloat(v.trim()));
-          payload.checkOut.location = { type: "Point", coordinates: coords };
-        }
+      // Build check-out
+      if (values.checkOutDate && values.checkOutTime) {
+        const [year, month, day] = values.checkOutDate.split("-").map(Number);
+        const [hours, minutes] = values.checkOutTime.split(":").map(Number);
+        const localDateTime = new Date(year, month - 1, day, hours, minutes, 0);
+        payload.checkOut = { time: localDateTime.toISOString() };
       }
 
-      // Flat fields
-      [
-        "totalBreakDuration",
-        "breaks",
-        "isLate",
-        "isEarlyLeave",
-        "lateBy",
-        "earlyBy",
-        "workHours",
-        "productiveHours",
-        "overtime",
-      ].forEach((key) => {
-        if (values[key] !== "" && values[key] !== undefined)
-          payload[key] = values[key];
-      });
-
+      if (values.workHours) payload.workHours = values.workHours;
       payload.remarks = values.remarks;
 
-      // console.log("Payload being sent:", payload);
-
-      await updateAttendance({
+      const res = await updateAttendance({
         id: record?._id,
         body: payload,
       }).unwrap();
-      toast.success("Attendance updated successfully");
+
+      toast.success(res?.message || "Attendance updated successfully");
       onClose();
     } catch (err) {
       toast.error(err?.data?.message || "Failed to update attendance");
@@ -413,12 +354,15 @@ export default function UpdateAttendanceModal({ isOpen, onClose, record }) {
   };
 
   if (!isOpen) return null;
+
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl w-full max-w-lg shadow-xl p-6 overflow-y-auto max-h-[90vh]">
+      <div className="bg-[#111] border border-[#2a2a2a] rounded-2xl w-full max-w-lg shadow-xl p-6 overflow-y-auto max-h-[90vh] 
+        sm:p-5 sm:max-w-md md:max-w-lg lg:max-w-lg xl:max-w-xl">
+        
         {/* Header */}
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-bold text-[#FFD700]">
+        <div className="flex justify-between items-center mb-5">
+          <h2 className="text-lg sm:text-xl font-semibold text-[#FFD700]">
             Update Attendance
           </h2>
           <button
@@ -435,17 +379,19 @@ export default function UpdateAttendanceModal({ isOpen, onClose, record }) {
           onSubmit={handleSubmit}
           enableReinitialize
         >
-          {({ isSubmitting, values }) => {
-            // console.log("Current form values:", values);
-            return (
+          {({ isSubmitting }) => (
             <Form className="space-y-3">
+              
               {/* Status */}
               <div className="flex flex-col">
-                <label className="text-xs text-gray-400 mb-1">Status</label>
+                <label className="text-xs sm:text-sm text-gray-400 mb-1">
+                  Status
+                </label>
                 <Field
                   as="select"
                   name="status"
-                  className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-white focus:border-[#FFD700] focus:ring-1 focus:ring-[#FFD700]"
+                  className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm sm:text-base text-white 
+                             focus:border-[#FFD700] focus:ring-1 focus:ring-[#FFD700]"
                 >
                   <option value="">Select Status</option>
                   <option value="present">Present</option>
@@ -454,112 +400,71 @@ export default function UpdateAttendanceModal({ isOpen, onClose, record }) {
                 </Field>
               </div>
 
-              {/* Check-in fields */}
-              <div className="flex flex-col gap-1">
-                <label className="text-xs text-gray-400 mb-1">
-                  Check-In Date
-                </label>
-                <Field
-                  type="date"
-                  name="checkInDate"
-                  className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-white focus:border-[#FFD700] focus:ring-1 focus:ring-[#FFD700]"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-xs text-gray-400 mb-1">
-                  Check-In Time
-                </label>
-                <Field
-                  type="time"
-                  name="checkInTime"
-                  className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-white focus:border-[#FFD700] focus:ring-1 focus:ring-[#FFD700]"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-xs text-gray-400 mb-1">
-                  Check-In Coordinates
-                </label>
-                <Field
-                  type="text"
-                  name="checkInCoordinates"
-                  placeholder="78.3669,17.4363"
-                  className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-white focus:border-[#FFD700] focus:ring-1 focus:ring-[#FFD700]"
-                />
-              </div>
-
-              {/* Check-out fields */}
-              <div className="flex flex-col gap-1">
-                <label className="text-xs text-gray-400 mb-1">
-                  Check-Out Date
-                </label>
-                <Field
-                  type="date"
-                  name="checkOutDate"
-                  className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-white focus:border-[#FFD700] focus:ring-1 focus:ring-[#FFD700]"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-xs text-gray-400 mb-1">
-                  Check-Out Time
-                </label>
-                <Field
-                  type="time"
-                  name="checkOutTime"
-                  className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-white focus:border-[#FFD700] focus:ring-1 focus:ring-[#FFD700]"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-xs text-gray-400 mb-1">
-                  Check-Out Coordinates
-                </label>
-                <Field
-                  type="text"
-                  name="checkOutCoordinates"
-                  placeholder="78.3669,17.4363"
-                  className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-white focus:border-[#FFD700] focus:ring-1 focus:ring-[#FFD700]"
-                />
-              </div>
-
-              {/* Other fields */}
-              {[
-                "totalBreakDuration",
-                "breaks",
-                "isLate",
-                "isEarlyLeave",
-                "lateBy",
-                "earlyBy",
-                "workHours",
-                "productiveHours",
-                "overtime",
-              ].map((field) => (
-                <div key={field} className="flex flex-col">
-                  <label className="text-xs text-gray-400 mb-1 capitalize">
-                    {field.replace(/([A-Z])/g, " $1")}
-                  </label>
-                  {["isLate", "isEarlyLeave"].includes(field) ? (
-                    <Field
-                      type="checkbox"
-                      name={field}
-                      className="accent-[#FFD700] h-4 w-4"
-                    />
-                  ) : (
-                    <Field
-                      type="text"
-                      name={field}
-                      className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-white focus:border-[#FFD700] focus:ring-1 focus:ring-[#FFD700]"
-                    />
-                  )}
+              {/* Check-in */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex flex-col">
+                  <label className="text-xs sm:text-sm text-gray-400 mb-1">Check-In Date</label>
+                  <Field
+                    type="date"
+                    name="checkInDate"
+                    className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-white 
+                               focus:border-[#FFD700] focus:ring-1 focus:ring-[#FFD700]"
+                  />
                 </div>
-              ))}
+                <div className="flex flex-col">
+                  <label className="text-xs sm:text-sm text-gray-400 mb-1">Check-In Time</label>
+                  <Field
+                    type="time"
+                    name="checkInTime"
+                    className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-white 
+                               focus:border-[#FFD700] focus:ring-1 focus:ring-[#FFD700]"
+                  />
+                </div>
+              </div>
+
+              {/* Check-out */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex flex-col">
+                  <label className="text-xs sm:text-sm text-gray-400 mb-1">Check-Out Date</label>
+                  <Field
+                    type="date"
+                    name="checkOutDate"
+                    className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-white 
+                               focus:border-[#FFD700] focus:ring-1 focus:ring-[#FFD700]"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="text-xs sm:text-sm text-gray-400 mb-1">Check-Out Time</label>
+                  <Field
+                    type="time"
+                    name="checkOutTime"
+                    className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-white 
+                               focus:border-[#FFD700] focus:ring-1 focus:ring-[#FFD700]"
+                  />
+                </div>
+              </div>
+
+              {/* Work Hours */}
+              <div className="flex flex-col">
+                <label className="text-xs sm:text-sm text-gray-400 mb-1">Work Hours</label>
+                <Field
+                  type="text"
+                  name="workHours"
+                  placeholder="e.g., 8h 30m"
+                  className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-white 
+                             focus:border-[#FFD700] focus:ring-1 focus:ring-[#FFD700]"
+                />
+              </div>
 
               {/* Remarks */}
               <div className="flex flex-col">
-                <label className="text-xs text-gray-400 mb-1">Remarks</label>
+                <label className="text-xs sm:text-sm text-gray-400 mb-1">Remarks</label>
                 <Field
                   as="textarea"
                   name="remarks"
                   placeholder="Enter remarks..."
-                  className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-white resize-none focus:border-[#FFD700] focus:ring-1 focus:ring-[#FFD700]"
+                  className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-white resize-none 
+                             focus:border-[#FFD700] focus:ring-1 focus:ring-[#FFD700]"
                 />
                 <ErrorMessage
                   name="remarks"
@@ -568,10 +473,12 @@ export default function UpdateAttendanceModal({ isOpen, onClose, record }) {
                 />
               </div>
 
+              {/* Submit */}
               <button
                 type="submit"
                 disabled={isSubmitting || isLoading}
-                className="w-full flex justify-center items-center gap-2 mt-4 bg-[#FFD700] text-black font-semibold py-2.5 rounded-lg hover:bg-[#e0c300] transition-all"
+                className="w-full flex justify-center items-center gap-2 mt-4 bg-[#FFD700] text-black font-semibold py-2.5 rounded-lg 
+                           hover:bg-[#e0c300] transition-all text-sm sm:text-base"
               >
                 {isSubmitting || isLoading ? (
                   <>
@@ -582,8 +489,7 @@ export default function UpdateAttendanceModal({ isOpen, onClose, record }) {
                 )}
               </button>
             </Form>
-          );
-          }}
+          )}
         </Formik>
       </div>
     </div>

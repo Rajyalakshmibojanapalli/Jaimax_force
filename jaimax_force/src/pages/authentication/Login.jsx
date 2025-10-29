@@ -1,17 +1,19 @@
+import { ErrorMessage, Field, Form, Formik } from "formik";
+import { AnimatePresence, motion } from "framer-motion";
+import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
-import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  useLoginMutation,
-  useForgotPasswordMutation,
-} from "../../features/auth/loginApiSlice";
 import { useDispatch } from "react-redux";
-import { setCredentials } from "../../features/auth/authSlice";
-import loginImg from "../../assets/images/image-log.png";
-import { Formik, Form, Field, ErrorMessage } from "formik";
+import { useNavigate } from "react-router-dom";
 import * as Yup from "yup";
+import loginImg from "../../assets/images/image-log.png";
+import { setCredentials } from "../../features/auth/authSlice";
+import {
+  useForgotPasswordMutation,
+  useLoginMutation,
+} from "../../features/auth/loginApiSlice";
+import { toast, ToastContainer } from "../../features/helpers/Toaster";
+import bg from "../../assets/images/grids.webp";
+import logo from "../../assets/images/jForceYellow-1.svg";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -49,7 +51,7 @@ export default function LoginPage() {
         setTimeout(() => {
           const storedUser = JSON.parse(localStorage.getItem("user"));
           if (storedUser && storedUser.fullName) {
-            toast.success("Login successful!");
+            toast.success("Login success!", res?.message || "Login successful!");
             navigate("/dashboard");
           } else {
             toast.error("Failed to load profile. Please retry.");
@@ -75,13 +77,20 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col lg:flex-row bg-black text-white font-sans overflow-hidden">
+    <div className="relative min-h-screen flex flex-col lg:flex-row bg-black text-white font-sans overflow-hidden"
+    style={{ 
+      backgroundImage: `linear-gradient(180deg, #000000e6, #000c 70%, #050505), url(${bg})`,
+    backgroundSize: "cover",
+    }}
+    >
       <ToastContainer />
 
       {/* === Top Branding === */}
-      <div className="absolute top-4 left-6 text-2xl font-bold tracking-wider">
-        <span className="text-[#FFD700]">JAI</span>
-        <span className="text-white">MAX</span>
+      <div  className="absolute top-4 left-6 cursor-pointer transition-transform duration-500 hover:scale-110 active:scale-95"
+      onClick={() => navigate("/")}>
+        {/* <span className="text-[#FFD700]">JAI</span>
+        <span className="text-white">MAX</span> */}
+        <img src={logo} alt="Logo" width={200}/>
       </div>
 
       {/* === Loader Overlay === */}
@@ -199,7 +208,11 @@ export default function LoginPage() {
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#FFD700]"
                       >
-                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        {showPassword ? (
+                          <EyeOff size={18} />
+                        ) : (
+                          <Eye size={18} />
+                        )}
                       </button>
                     </div>
                     <ErrorMessage
@@ -216,7 +229,7 @@ export default function LoginPage() {
                     <button
                       type="button"
                       onClick={() => setForgotMode(true)}
-                      className="text-[#FFD700] hover:text-[#FFD700]/80 font-medium"
+                      className="text-[#FFD700] font-medium hover:underline hover:decoration-yellow-400 "
                     >
                       Forgot Password?
                     </button>
@@ -243,7 +256,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setForgotMode(false)}
-                    className="w-full py-2 text-xs sm:text-sm text-gray-400 hover:text-white"
+                    className="w-full py-2 text-xs sm:text-sm text-gray-400 hover:text-white hover:underline hover:decoration-white"
                   >
                     Back to Login
                   </button>

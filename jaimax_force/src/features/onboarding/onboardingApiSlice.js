@@ -47,19 +47,17 @@ export const onboardingApi = apiSlice.injectEndpoints({
 
     // --- Get All Onboarded Employees (For Manager/Admin) ---
     getAllEmployees: builder.query({
-  query: ({ searchTerm = "", page = 1, limit = 10 } = {}) => {
-
-    return {
-      url: `/jaimaxforceonboaring/employees?search=${searchTerm}&page=${page}&limit=${limit}`,
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json"
+      query: ({ searchTerm = "", page = 1, limit = 10 } = {}) => {
+        return {
+          url: `/jaimaxforceonboaring/employees?search=${searchTerm}&page=${page}&limit=${limit}`,
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        };
       },
-    };
-  },
-  providesTags: ["Employees"],
-}),
-
+      providesTags: ["Employees"],
+    }),
 
     // --- Get Single Employee By ID (Detailed View) ---
     getEmployeeById: builder.query({
@@ -97,7 +95,18 @@ export const onboardingApi = apiSlice.injectEndpoints({
         body: payload,
         headers: { "Content-Type": "application/json" },
       }),
-      invalidatesTags: ["Users"],
+      invalidatesTags: ["Employee"],
+    }),
+
+    // update domain Email
+    updateMail: builder.mutation({
+      query: ({id, body}) => ({
+        url: `/jaimaxforceonboaring/update-domain-email/${id}`,
+        method: "PUT",
+        body,
+        headers: { "Content-Type": "application/json" },
+      }),
+      invalidatesTags: ["Employee"],
     }),
   }),
 });
@@ -112,4 +121,5 @@ export const {
   useVerifyEmployeeSectionMutation,
   useCompleteEmployeeOnboardingMutation,
   useResendInvitationMutation,
+  useUpdateMailMutation,
 } = onboardingApi;

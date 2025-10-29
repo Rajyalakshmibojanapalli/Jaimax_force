@@ -166,8 +166,8 @@
 // }
 
 
-import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import React, {useEffect, useRef} from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   User,
   CalendarDays,
@@ -189,12 +189,28 @@ import {
 } from "lucide-react";
 import LogoutModal from "../pages/authentication/LogoutModal";
 import { useSelector } from "react-redux";
+import logo from "../assets/images/jForceYellow-1.svg";
 
 export default function Sidebar({ isOpen, toggleSidebar }) {
   const { user, currentMode } = useSelector((state) => state.auth);
   const role = user?.role?.toLowerCase() || "null";
   const location = useLocation();
   const isEmployeeMode = currentMode === "employee";
+
+  const navigate = useNavigate();
+
+// --- track previous mode to detect actual change ---
+  const prevModeRef = useRef(currentMode);
+
+  useEffect(() => {
+    if (prevModeRef.current !== currentMode) {
+      // Only redirect if mode actually changed
+      if (location.pathname !== "/dashboard") {
+        navigate("/dashboard");
+      }
+    }
+    prevModeRef.current = currentMode;
+  }, [currentMode, navigate, location.pathname]);
 
   // --- Link class helper ---
   const linkCls = (path) =>
@@ -230,9 +246,10 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
         {/* Header */}
         <div className="flex flex-col items-start justify-between p-4">
           <div className="flex w-full justify-between items-center">
-            <h2 className="text-xl font-bold text-[#FFD700]">
+            <img src={logo} alt="Logo" width={180} />
+            {/* <h2 className="text-xl font-bold text-[#FFD700]">
               Jaimax <span className="text-white">Force</span>
-            </h2>
+            </h2> */}
             <button
               onClick={toggleSidebar}
               className="md:hidden text-gray-400 hover:text-white"
@@ -402,6 +419,13 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
                 >
                   <Clock size={18} /> Applied Leaves
                 </Link>
+                <Link
+                to="/holidays"
+                onClick={handleLinkClick}
+                className={linkCls("/holidays")}
+              >
+                <Palmtree size={18} /> Holidays
+              </Link>
                 <Link
                   to="/notifications"
                   onClick={handleLinkClick}

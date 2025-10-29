@@ -1,15 +1,17 @@
-import React, { useState } from "react";
-import { createPortal } from "react-dom";
-import { useNavigate } from "react-router-dom";
-import { useLogoutUserMutation } from "../../features/auth/loginApiSlice";
-import { toast } from "react-toastify";
-import { motion, AnimatePresence } from "framer-motion";
-import { useDispatch } from "react-redux";
-import { logout } from "../../features/auth/authSlice";
+import { AnimatePresence, motion } from "framer-motion";
 import { AlertTriangle } from "lucide-react";
-import { clearProfile } from "../../features/profile/profileSlice";
+import { useState } from "react";
+import { createPortal } from "react-dom";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { persistor } from "../../app/store";
 import { clearAttendance } from "../../features/attendance/attendanceSlice";
+import { logout } from "../../features/auth/authSlice";
+import { useLogoutUserMutation } from "../../features/auth/loginApiSlice";
+import { toast } from "../../features/helpers/Toaster";
+import { clearHolidays } from "../../features/holidays/holidaySlice";
+import { clearLeaves } from "../../features/leaves/leaveSlice";
+import { clearProfile } from "../../features/profile/profileSlice";
 
 export default function LogoutModal({
   triggerText = "Logout",
@@ -22,26 +24,24 @@ export default function LogoutModal({
   const dispatch = useDispatch();
 
   const handleLogout = async () => {
-  try {
-    const res = await logoutUser().unwrap();
-    toast.success(res?.message || "You’ve been logged out successfully!", {
-      position: "top-center",
-      autoClose: 1500,
-      theme: "dark",
-    });
+    try {
+      const res = await logoutUser().unwrap();
+      toast.success("Logout Successful", res?.message || "You’ve been logged out successfully!");
 
-    setTimeout(() => {
-      dispatch(logout()); // Clear tokens AFTER showing toast
-      setOpen(false);
-      dispatch(clearProfile());
-      dispatch(clearAttendance());
-      persistor.purge();
-      navigate("/login");
-    }, 1000);
-  } catch (err) {
-    toast.error(err?.data?.message || "Logout failed. Please try again.");
-  }
-};
+      setTimeout(() => {
+        dispatch(logout()); // Clear tokens AFTER showing toast
+        setOpen(false);
+        dispatch(clearProfile());
+        dispatch(clearAttendance());
+        dispatch(clearLeaves());
+        dispatch(clearHolidays());
+        persistor.purge();
+        navigate("/login");
+      }, 1000);
+    } catch (err) {
+      toast.error(err?.data?.message || "Logout failed. Please try again.");
+    }
+  };
 
   const triggerStyles =
     variant === "button"
@@ -66,7 +66,7 @@ export default function LogoutModal({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[999] flex items-center justify-center bg-transparent backdrop-blur-sm"
+              className="fixed inset-0 z-[999] flex items-center justify-center bg-transparent "
             >
               <motion.div
                 key="modal-content"
@@ -76,7 +76,10 @@ export default function LogoutModal({
                 transition={{ duration: 0.25 }}
                 className="bg-[#1a1a1a] border border-[#FFD700]/30 rounded-2xl p-6 sm:p-8 shadow-2xl w-[90%] sm:w-[420px] text-center"
               >
-                <AlertTriangle size={40} className="text-red-500 mx-auto mb-4"/>
+                <AlertTriangle
+                  size={40}
+                  className="text-red-500 mx-auto mb-4"
+                />
                 <h2 className="text-2xl font-bold text-[#FFD700] mb-4">
                   Confirm Logout
                 </h2>

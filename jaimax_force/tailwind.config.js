@@ -13,6 +13,10 @@ export default {
       willChange: {
       transform: 'transform',
     },
+    screens: {
+      'xs': {'max': '375px'},
+      'xxs': {'max': '320px'},
+    },
     },
   },
   plugins: [],

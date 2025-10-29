@@ -35,7 +35,7 @@ export default function MonthlyStatsOfTeam() {
   const totalWorkingDays = statsData?.data?.totalWorkingDays || 0;
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-white p-4 sm:p-6 md:p-8">
+    <div className="min-h-screen bg-[#0f0f0f] text-white p-4 sm:p-4 md:p-4">
       <ToastContainer />
 
       {/* Header */}
@@ -45,7 +45,7 @@ export default function MonthlyStatsOfTeam() {
             <CalendarDays size={24} className="text-[#FFD700]" />
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold">
+            <h1 className="text-xl sm:text-2xl font-bold text-[#FFD700]">
               Monthly Stats of Team
             </h1>
             <p className="text-xs sm:text-sm text-gray-400 mt-0.5">
@@ -56,9 +56,9 @@ export default function MonthlyStatsOfTeam() {
 
         <button
           onClick={handleRefresh}
-          className="flex items-center gap-2 px-4 py-2 bg-[#FFD700] text-black text-sm rounded-lg font-semibold hover:bg-[#e0c300] transition-all duration-200 shadow-lg shadow-[#FFD700]/20"
+          className="flex items-center gap-2 px-4 py-2 bg-[#FFD700] text-black text-sm rounded-lg w-12 lg:w-auto md:w-auto font-semibold hover:bg-[#e0c300] transition-all duration-200 shadow-lg shadow-[#FFD700]/20"
         >
-          <RefreshCw size={16} />
+          <RefreshCw size={17} />
           <span className="hidden sm:inline">Refresh</span>
         </button>
       </div>
@@ -70,7 +70,7 @@ export default function MonthlyStatsOfTeam() {
           <select
             value={month}
             onChange={handleMonthChange}
-            className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-white focus:border-[#FFD700] outline-none"
+            className="bg-[#1a1a1a] border border-[#3d3d3d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#FFD700] outline-none"
           >
             {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
               <option key={m} value={m}>
@@ -88,15 +88,15 @@ export default function MonthlyStatsOfTeam() {
             max={now.getFullYear()}
             value={year}
             onChange={handleYearChange}
-            className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-white focus:border-[#FFD700] outline-none"
+            className="bg-[#1a1a1a] border border-[#3d3d3d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#FFD700] outline-none"
           />
         </div>
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto border border-[#2a2a2a] rounded-xl bg-[#1a1a1a] shadow-xl">
+      <div className="overflow-x-auto border border-[#3d3d3d] rounded-xl bg-[#1a1a1a] shadow-xl">
         <table className="w-full text-sm text-left min-w-[900px]">
-          <thead className="bg-[#222] text-[#FFD700] border-b-2 border-[#FFD700]/20">
+          <thead className="bg-[#FFD700] text-black border-b-2 border-[#222]">
             <tr>
               <th className="p-3 sm:p-4 font-semibold whitespace-nowrap">Name</th>
               <th className="p-3 sm:p-4 font-semibold whitespace-nowrap">User ID</th>

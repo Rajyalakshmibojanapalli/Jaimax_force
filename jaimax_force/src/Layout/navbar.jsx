@@ -46,6 +46,7 @@ import { Menu } from "lucide-react";
 import LogoutModal from "../pages/authentication/LogoutModal";
 import { useSelector, useDispatch } from "react-redux";
 import { toggleUserMode } from "../features/auth/authSlice";
+import logo from "../assets/images/jForceYellow-1.svg";
 
 export default function Navbar({ toggleSidebar }) {
   const dispatch = useDispatch();
@@ -74,6 +75,7 @@ export default function Navbar({ toggleSidebar }) {
             </span>
           </span>
           <span className="inline sm:hidden text-white font-bold">
+            {/* <img src={logo} alt="Logo" width={180}/> */}
             Jai<span className="text-[#FFD700]">max</span>
           </span>
         </h1>
@@ -105,15 +107,15 @@ export default function Navbar({ toggleSidebar }) {
         )}
 
         {/* Logout Button */}
-        <div className="flex-shrink-0">
-          <div className="hidden xs:block">
-            <LogoutModal triggerText="Logout" variant="button" />
+        <div className="flex-shrink-0 !rounded-full">
+          <div className="hidden xs:block ">
+            <LogoutModal triggerText="Logout" variant="button" className="!rounded-full"/>
           </div>
-          <div className="block xs:hidden">
+          <div className="block xs:hidden ">
             <LogoutModal
               triggerText="Logout"
               variant="button"
-              className="!px-2 !py-1 text-sm !text-[#fff] !border-[#FFD700]/50 hover:!border-[#FFD700]"
+              className="!px-2 !py-1 text-sm !text-[#fff] !border-[#FFD700]/50 hover:!border-[#FFD700] !rounded-full"
             />
           </div>
         </div>

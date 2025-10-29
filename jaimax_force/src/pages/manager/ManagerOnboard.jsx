@@ -1,6 +1,6 @@
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import { useState } from "react";
-import { toast, ToastContainer } from "react-toastify";
+import { toast, ToastContainer } from "../../features/helpers/Toaster";
 import "react-toastify/dist/ReactToastify.css";
 import * as Yup from "yup";
 import { useCreateUserMutation } from "../../features/onboarding/onboardingApiSlice";

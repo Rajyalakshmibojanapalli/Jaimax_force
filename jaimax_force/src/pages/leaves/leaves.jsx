@@ -109,15 +109,18 @@ export default function Leaves() {
         </h1>
 
         <button
-          onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 bg-[#FFD700] text-black font-semibold px-5 py-2 rounded-full hover:scale-105 transition"
-        >
-          <PlusCircle size={18} /> Apply Leave
-        </button>
+  onClick={() => setShowModal(true)}
+  className="flex items-center justify-center gap-2 bg-[#FFD700] text-black font-semibold px-5 py-2 rounded-full hover:scale-105 transition"
+>
+  <PlusCircle size={18} />
+  {/* Show text only on md and above */}
+  <span className="hidden md:inline">Apply Leave</span>
+</button>
+
       </div>
 
       {/* Leaves Table */}
-      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 shadow-md">
+      {/* <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 shadow-md"> */}
         <h2 className="text-xl font-semibold text-[#FFD700] mb-4">
           Leave History
         </h2>
@@ -129,17 +132,17 @@ export default function Leaves() {
         ) : filteredLeaves.length === 0 ? (
           <p className="text-gray-400 text-sm">No leave records found.</p>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto border border-[#3d3d3d] rounded-lg">
             <table className="min-w-full text-sm border border-[#2a2a2a] rounded-lg overflow-hidden">
-              <thead className="bg-[#222] text-[#FFD700]">
+              <thead className="bg-[#FFD700] text-black border-b-2 border-[#3d3d3d]">
                 <tr>
-                  <th className="p-3 text-left">Leave Type</th>
-                  <th className="p-3 text-left">Start</th>
-                  <th className="p-3 text-left">End</th>
+                  <th className="p-3 text-left min-w-[120px]">Leave Type</th>
+                  <th className="p-3 text-left min-w-[120px]">Start</th>
+                  <th className="p-3 text-left min-w-[120px]">End</th>
                   <th className="p-3 text-left">Total Days</th>
-                  <th className="p-3 text-left">Status</th>
-                  <th className="p-3 text-left">Reason</th>
-                  <th className="p-3 text-left">Reviewed By</th>
+                  <th className="p-3 text-left min-w-[100px]">Status</th>
+                  <th className="p-3 text-left min-w-[150px]">Reason</th>
+                  <th className="p-3 text-left min-w-[120px]">Reviewed By</th>
                   <th className="p-3 text-left">Action</th>
                 </tr>
               </thead>
@@ -190,7 +193,7 @@ export default function Leaves() {
             </table>
           </div>
         )}
-      </div>
+      {/* </div> */}
 
 {/* Leave Balance Section */}
 {balanceData?.leaveBalance && (
@@ -389,7 +392,7 @@ export default function Leaves() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-6 py-2 bg-gradient-to-r from-[#FFD700] to-[#ffffff] text-black rounded-full font-semibold hover:scale-105 transition disabled:opacity-60"
+                  className="px-6 py-2 bg-[#FFD700] text-black rounded-full font-semibold hover:scale-105 transition disabled:opacity-60"
                 >
                   {submitting ? "Submitting..." : "Submit"}
                 </button>

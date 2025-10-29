@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { CalendarDays, PlusCircle, Trash2, X } from "lucide-react";
 import {
   useGetHolidaysQuery,
@@ -7,19 +7,57 @@ import {
 } from "../../features/holidays/holidayApiSlice";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { setHolidaysData } from "../../features/holidays/holidaySlice";
 
 export default function Holidays() {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
 
+  const dispatch = useDispatch();
+
+  const persistedHolidays = useSelector((state) => state.holidays);
+  const lastFetched = useSelector((state) => state.holidays.lastFetched);
+
+  // const skipFetch = selectedYear === currentYear && persistedHolidays;
+  const skipFetch =
+  !(
+    selectedYear !== currentYear ||
+    !persistedHolidays?.data ||
+    persistedHolidays?.data?.length === 0
+  )
+    ? false
+    : selectedYear === currentYear && persistedHolidays?.data?.length > 0;
+
+  // console.log(persistedHolidays)
+
+  const {
+    data: holidaysResponse,
+    isLoading,
+    isSuccess,
+    isError,
+  } = useGetHolidaysQuery(selectedYear, {
+    skip: skipFetch,
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
+  });
+
+  useEffect(() => {
+    if (selectedYear === currentYear && isSuccess && holidaysResponse?.data) {
+      dispatch(setHolidaysData(holidaysResponse.data));
+    }
+  }, [selectedYear, currentYear, isSuccess, holidaysResponse, dispatch]);
+
   // Directly depend on selectedYear → refetches automatically when it changes
-  const { data, isLoading, isError } = useGetHolidaysQuery(selectedYear);
+  // const { data, isLoading, isError } = useGetHolidaysQuery(selectedYear);
 
   const [createHoliday, { isLoading: creating }] = useCreateHolidayMutation();
   const [deleteHoliday, { isLoading: deleting }] = useDeleteHolidayMutation();
-  const user = useSelector((state) => state.auth?.user);
-  const role = user?.role;
+  const { user, currentMode } = useSelector((state) => state.auth);
+  const role = user?.role?.toLowerCase() || "null";
+  const isEmployeeMode = currentMode !== "employee";
+
+  // console.log(isEmployeeMode)
 
   const [showModal, setShowModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -32,9 +70,32 @@ export default function Holidays() {
     year: currentYear,
   });
 
-  const holidays = data?.data || [];
+  // const holidays = data?.data || [];
 
-  // ➕ Handle Create Holiday
+  // const fetchHolidays =
+  //   selectedYear === currentYear && persistedHolidays
+  //     ? persistedHolidays
+  //     : holidaysResponse?.data || [];
+
+  // const holidays = fetchHolidays?.data
+
+    // console.log(holidays)
+
+    let holidays = [];
+
+  if (selectedYear === currentYear && persistedHolidays?.data?.length) {
+    // Use persisted Redux holidays if available
+    holidays = persistedHolidays.data;
+  } else if (holidaysResponse?.data?.length) {
+    // Use freshly fetched data
+    holidays = holidaysResponse.data;
+  } else {
+    holidays = []; // Fallback (no holidays)
+  }
+
+  const isEmpty = !holidays || holidays.length === 0;
+
+  // Handle Create Holiday
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
@@ -99,7 +160,7 @@ export default function Holidays() {
             })}
           </select>
 
-          {(role === "admin" || role === "hr") && (
+          {(isEmployeeMode) && (
             <button
               onClick={() => setShowModal(true)}
               className="flex items-center gap-2 bg-[#FFD700] text-black px-4 py-2 rounded-md hover:bg-[#e6c200] transition"
@@ -116,7 +177,7 @@ export default function Holidays() {
           <p className="p-4 text-gray-400">Loading holidays...</p>
         ) : isError ? (
           <p className="p-4 text-red-400">Failed to fetch holidays.</p>
-        ) : holidays.length === 0 ? (
+        ) : isEmpty ? (
           <p className="p-4 text-gray-400">No holidays found for {selectedYear}.</p>
         ) : (
           <table className="w-full text-sm">
@@ -126,13 +187,13 @@ export default function Holidays() {
                 <th className="px-4 py-3 text-left">Date</th>
                 <th className="px-4 py-3 text-left">Type</th>
                 <th className="px-4 py-3 text-left">Year</th>
-                {(role === "admin" || role === "hr") && (
+                {(isEmployeeMode) && (
                   <th className="px-4 py-3 text-center">Action</th>
                 )}
               </tr>
             </thead>
             <tbody>
-              {holidays.map((holiday) => {
+              {holidays?.map((holiday) => {
                 const dateObj = new Date(holiday.date);
                 const holidayYear = dateObj.getFullYear();
 
@@ -151,7 +212,7 @@ export default function Holidays() {
                     </td>
                     <td className="px-4 py-3 capitalize">{holiday.type}</td>
                     <td className="px-4 py-3">{holidayYear}</td>
-                    {(role === "admin" || role === "hr") && (
+                    {(isEmployeeMode) && (
                       <td className="px-4 py-3 text-center">
                         <button
                           onClick={() => confirmDelete(holiday)}

@@ -287,19 +287,45 @@ import { Menu, X } from "lucide-react";
 import LandingHero from "./LandingHero";
 import { StatsSection } from "./StatsSection";
 import { TeamSection } from "./TeamSection";
-import heroImage from "../../assets/images/28385.jpg";
-import { Mail, Phone, MapPin, Linkedin, Twitter, Instagram } from "lucide-react";
+import heroImageDesktop from "../../assets/images/28385.jpg";
+import heroImageMobile from "../../assets/images/landing-mobile-bg.jpeg";
+import {
+  Mail,
+  Phone,
+  MapPin,
+  Linkedin,
+  Twitter,
+  Instagram,
+} from "lucide-react";
+// import logo from "../../assets/images/jaimaxLogo.svg";
+import logo from "../../assets/images/jForceYellow-1.svg";
+import logo1 from "../../assets/images/jForceblack-1.svg";
 
 export default function LandingPage() {
   const [scrollY, setScrollY] = useState(0);
   const [showContent, setShowContent] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const [bgImage, setBgImage] = useState(heroImageDesktop);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const updateBg = () => {
+      if (window.innerWidth < 768) {
+        setBgImage(heroImageMobile);
+      } else {
+        setBgImage(heroImageDesktop);
+      }
+    };
+
+    updateBg();
+    window.addEventListener("resize", updateBg);
+    return () => window.removeEventListener("resize", updateBg);
   }, []);
 
   return (
@@ -321,14 +347,18 @@ export default function LandingPage() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
               <div className="flex justify-between items-center py-5 border-b border-[#FFD700]/10">
                 {/* Logo */}
-                <div className="text-2xl sm:text-3xl font-bold tracking-tight">
+                {/* <div className="text-2xl sm:text-3xl font-bold tracking-tight">
                   <span className="text-white">JAI</span>
                   <span className="text-[#FFD700]">MAX</span>
+                </div> */}
+
+                <div>
+                  <img src={logo} alt="Logo" width={200}/>
                 </div>
 
                 {/* Desktop Links */}
                 <div className="hidden md:flex gap-10 items-center">
-                  {["FEATURES", "SOLUTIONS", "ABOUT"].map((item) => (
+                  {["Guidelines"].map((item) => (
                     <a
                       key={item}
                       href="#"
@@ -357,14 +387,16 @@ export default function LandingPage() {
 
             {/* Mobile Menu Dropdown */}
             {menuOpen && (
-              <div className="
+              <div
+                className="
       fixed z-40 bg-black/100 backdrop-blur-lg md:hidden
       top-0 right-0 w-[70%] sm:w-[60%] lg:w-[40%]
       rounded-l-xl shadow-2xl p-6 sm:p-8
       transition-all duration-300 ease-in-out
       [@media(max-width:360px)]:p-4
       [@media(max-width:360px)]:w-[85%]
-    ">
+    "
+              >
                 <div className="flex justify-end pt-1 ">
                   <button
                     onClick={() => setMenuOpen(false)}
@@ -375,7 +407,7 @@ export default function LandingPage() {
                 </div>
 
                 <div className="flex flex-col items-center justify-center mt-6 space-y-8 mb-5 ">
-                  {["FEATURES", "SOLUTIONS", "ABOUT"].map((item) => (
+                  {["Guidelines"].map((item) => (
                     <a
                       key={item}
                       href="#"
@@ -405,7 +437,9 @@ export default function LandingPage() {
             <div
               className="absolute inset-0 bg-cover bg-center md:bg-top lg:bg-center"
               style={{
-                backgroundImage: `url(${heroImage})`,
+                backgroundImage: `url(${bgImage})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
                 minHeight: "100vh",
               }}
             ></div>
@@ -426,10 +460,10 @@ export default function LandingPage() {
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button
-                  className="px-6 py-3 sm:px-8 sm:py-4 bg-[#FFD700] text-black font-semibold hover:bg-[#e1c839] rounded-full transition-all duration-300 text-sm sm:text-base"
+                  className="px-6 py-3 sm:px-8 sm:py-4 w-auto md:w-auto mx-auto bg-[#FFD700] text-black font-semibold hover:bg-[#e1c839] rounded-full transition-all duration-300 text-sm sm:text-base"
                   onClick={() => navigate("/login")}
                 >
-                  Get Started →
+                  Get Started
                 </button>
                 {/* <button className="px-6 py-3 sm:px-8 sm:py-4 border border-white/20 text-white rounded-md hover:border-white hover:bg-white/5 transition-all duration-300 text-sm sm:text-base">
                   Schedule Demo
@@ -443,133 +477,120 @@ export default function LandingPage() {
           <TeamSection />
 
           {/* Footer line */}
-          <footer className="relative bg-[#FFD700] text-black overflow-hidden">
-      {/* Top gradient divider */}
-      <div className="absolute top-0 left-0 right-0">
-        <div className="h-px bg-gradient-to-r from-transparent via-black/40 to-transparent"></div>
+         {/* === FOOTER === */}
+<footer className="relative bg-white text-black overflow-hidden">
+  {/* Top gradient divider */}
+  <div className="absolute top-0 left-0 right-0">
+    <div className="h-px bg-gradient-to-r from-transparent via-black/40 to-transparent"></div>
+  </div>
+
+  {/* Content */}
+  <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8 md:px-10 lg:px-12 py-14 sm:py-16">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 sm:gap-12">
+      {/* 1. Brand */}
+      <div className="text-center sm:text-left">
+        {/* <h3 className="text-2xl sm:text-3xl font-bold mb-3">
+          <span className="text-black">JAI</span>
+          <span className="text-black drop-shadow-md">MAX</span>
+        </h3> */}
+        <img src={logo1} alt="Logo" width={200} />
+        <p className="text-black/80 text-sm sm:text-base leading-relaxed max-w-xs mx-auto sm:mx-0">
+          Empowering businesses through secure, scalable, and future-ready
+          blockchain technology.
+        </p>
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-10 py-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
-          {/* 1. Brand */}
-          <div>
-            <h3 className="text-2xl font-bold mb-3">
-              <span className="text-black">JAI</span>
-              <span className="text-white drop-shadow-md">MAX</span>
-            </h3>
-            <p className="text-black/80 text-sm leading-relaxed max-w-xs">
-              Empowering businesses through secure, scalable, and future-ready
-              blockchain technology.
-            </p>
-          </div>
+      {/* 2. Contact */}
+      <div className="text-center sm:text-left">
+        <h4 className="font-semibold mb-4 text-black uppercase tracking-wide text-sm sm:text-base">
+          Contact
+        </h4>
+        <ul className="space-y-3 text-sm sm:text-base text-black/80">
+          {[
+            { Icon: Mail, text: "support@jaimax.io" },
+            { Icon: Phone, text: "+91 98765 43210" },
+            { Icon: MapPin, text: "Hyderabad, India" },
+          ].map(({ Icon, text }, idx) => (
+            <li
+              key={idx}
+              className="flex items-center justify-center sm:justify-start gap-2 group relative overflow-hidden"
+            >
+              <Icon size={16} className="text-black flex-shrink-0" />
+              <span className="transition-colors duration-300 group-hover:text-black font-medium">
+                {text}
+              </span>
+              {/* underline highlight */}
+              <span className="absolute left-0 bottom-0 w-0 h-[1.5px] bg-black transition-all duration-300 group-hover:w-40"></span>
+            </li>
+          ))}
+        </ul>
+      </div>
 
-          {/* 2. Quick Links */}
-          <div>
-            <h4 className="font-semibold mb-3 text-black uppercase tracking-wide">
-              Quick Links
-            </h4>
-            <ul className="space-y-2 text-sm text-black/80">
-              {["About Us", "Solutions", "Careers", "Contact"].map((link) => (
-                <li key={link} className="relative group overflow-hidden">
-                  <a
-                    href="#"
-                    className="inline-block transition-all duration-300 group-hover:text-black font-medium"
-                  >
-                    {link}
-                  </a>
-                  {/* underline animation */}
-                  <span className="absolute left-0 bottom-0 w-0 h-[1.5px] bg-black transition-all duration-300 group-hover:w-16"></span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* 3. Contact */}
-          <div>
-            <h4 className="font-semibold mb-3 text-black uppercase tracking-wide">
-              Contact
-            </h4>
-            <ul className="space-y-3 text-sm text-black/80">
-              {[
-                { Icon: Mail, text: "support@jaimax.io" },
-                { Icon: Phone, text: "+91 98765 43210" },
-                { Icon: MapPin, text: "Hyderabad, India" },
-              ].map(({ Icon, text }, idx) => (
-                <li key={idx} className="flex items-center gap-2 group relative overflow-hidden">
-                  <Icon size={16} className="text-black flex-shrink-0" />
-                  <span className="transition-colors duration-300 group-hover:text-black font-medium">
-                    {text}
-                  </span>
-                  {/* left-to-right highlight */}
-                  <span className="absolute left-0 bottom-0 w-0 h-[1.5px] bg-black transition-all duration-300 group-hover:w-40"></span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* 4. Social Links */}
-          <div>
-            <h4 className="font-semibold mb-3 text-black uppercase tracking-wide">
-              Follow Us
-            </h4>
-            <div className="flex gap-4">
-              {/* LinkedIn */}
-              <a
-                href="#"
-                className="p-2 rounded-full border border-black/10 hover:bg-[#0A66C2] transition-all duration-300 hover:text-white"
-              >
-                <Linkedin
-                  size={18}
-                  className="transition-colors duration-300 "
-                />
-              </a>
-
-              {/* Twitter */}
-              <a
-                href="#"
-                className="p-2 rounded-full border border-black/10 hover:bg-[#1DA1F2] transition-all duration-300 hover:text-white"
-              >
-                <Twitter
-                  size={18}
-                  className="transition-colors duration-300 "
-                />
-              </a>
-
-              {/* Instagram */}
-              <a
-                href="#"
-                className="p-2 rounded-full border border-black/10 hover:bg-[#E1306C] transition-all duration-300 hover:text-white"
-              >
-                <Instagram
-                  size={18}
-                  className="transition-colors duration-300 "
-                />
-              </a>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom divider and copyright */}
-        <div className="mt-12 pt-6 border-t border-black/20 text-center text-sm text-black/70">
-          © {new Date().getFullYear()} <span className="font-semibold text-black">Jaimax</span>. All rights reserved.
+      {/* 3. Follow Us */}
+      <div className="text-center sm:text-left">
+        <h4 className="font-semibold mb-4 text-black uppercase tracking-wide text-sm sm:text-base">
+          Follow Us
+        </h4>
+        <div className="flex justify-center sm:justify-start gap-4">
+          <a
+            href="#"
+            aria-label="LinkedIn"
+            className="p-2 rounded-full border border-black/10 hover:bg-[#0A66C2] hover:text-white transition-all duration-300"
+          >
+            <Linkedin size={18} />
+          </a>
+          <a
+            href="#"
+            aria-label="Twitter"
+            className="p-2 rounded-full border border-black/10 hover:bg-[#1DA1F2] hover:text-white transition-all duration-300"
+          >
+            <Twitter size={18} />
+          </a>
+          <a
+            href="#"
+            aria-label="Instagram"
+            className="p-2 rounded-full border border-black/10 hover:bg-[#E1306C] hover:text-white transition-all duration-300"
+          >
+            <Instagram size={18} />
+          </a>
         </div>
       </div>
-    </footer>
+
+      {/* 4. Subscribe or Note (Optional) */}
+      <div className="text-center sm:text-left">
+        <h4 className="font-semibold mb-4 text-black uppercase tracking-wide text-sm sm:text-base">
+          Stay Updated
+        </h4>
+        <p className="text-black/70 text-sm mb-3 leading-relaxed">
+          Get updates about our latest blockchain products and ecosystem news.
+        </p>
+        <form className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
+          <input
+            type="email"
+            placeholder="Enter your email"
+            className="w-full sm:flex-1 px-3 py-2 border border-black/20 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-black"
+          />
+          <button
+            type="submit"
+            className="px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-all duration-300"
+          >
+            Subscribe
+          </button>
+        </form>
+      </div>
+    </div>
+
+    {/* Divider and copyright */}
+    <div className="mt-10 sm:mt-12 pt-6 border-t border-black/20 text-center text-xs sm:text-sm text-black/70">
+      © {new Date().getFullYear()}{" "}
+      <span className="font-semibold text-black">Jaimax</span>. All rights
+      reserved.
+    </div>
+  </div>
+</footer>
+
         </>
       )}
     </div>
   );
 }
-
-
-// import LandingHero from "./LandingHero";
-
-// export default function LandingPage() {
-//   return (
-//     <div className="bg-black text-white min-h-screen">
-//       <LandingHero />
-//       {/* Keep other sections below */}
-//     </div>
-//   );
-// }

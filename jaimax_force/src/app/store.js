@@ -8,11 +8,12 @@ import logger from "redux-logger";
 import { setupListeners } from "@reduxjs/toolkit/query";
 import storage from "redux-persist/lib/storage";
 import { persistReducer, persistStore } from "redux-persist";
+import holidaysReducer from "../features/holidays/holidaySlice";
 
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["auth", "profile", "attendance", "leaves"], 
+  whitelist: ["auth", "profile", "attendance", "leaves", "holidays"], 
 };
 
 const rootReducer = combineReducers({
@@ -21,6 +22,7 @@ const rootReducer = combineReducers({
   profile: profileReducer,
   attendance: attendanceReducer,
   leaves: leavesReducer,
+  holidays: holidaysReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

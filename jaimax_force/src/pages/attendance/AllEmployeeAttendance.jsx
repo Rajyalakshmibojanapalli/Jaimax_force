@@ -88,7 +88,7 @@ export default function AllEmployeeAttendance() {
   }, [refetch]);
 
   return (
-    <div className="flex flex-col flex-1 bg-[#0f0f0f] text-white p-2 sm:p-2 md:p-2 ">
+    <div className="flex flex-col flex-1 bg-[#0f0f0f] text-white p-4 sm:p-4 md:p-4 mb-10 lg:mb-0 ">
       <ToastContainer />
 
       {/* Header */}
@@ -98,7 +98,7 @@ export default function AllEmployeeAttendance() {
             <CalendarDays size={24} className="text-[#FFD700]" />
           </div>
           <div>
-            <h1 className="text-lg sm:text-xl md:text-2xl font-bold">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-[#FFD700]">
               {filters.employeeId
                 ? `Employee Attendance`
                 : "All Employees Attendance"}
@@ -110,8 +110,9 @@ export default function AllEmployeeAttendance() {
             )}
           </div>
         </div>
+         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 justify-end">
           {filters.employeeId && (
             <button
               onClick={handleBackToAll}
@@ -128,16 +129,16 @@ export default function AllEmployeeAttendance() {
             <span className="hidden sm:inline">Refresh</span>
           </button>
         </div>
-      </div>
+     
 
       {/* Filters */}
       <div className="mb-4 sm:mb-6">
         <div className="flex items-center gap-2 mb-3">
-          <Filter size={18} className="text-[#FFD700]" />
-          <h2 className="text-sm font-semibold text-gray-300">Filters & Sorting</h2>
+          {/* <Filter size={18} className="text-[#FFD700]" /> */}
+          <h2 className="text-sm font-semibold text-gray-300 p-1">Filters & Sorting</h2>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-3 sm:p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 bg-[#1a1a1a] border border-[#3d3d3d] rounded-xl p-3 sm:p-4">
           <div className="flex flex-col">
             <label className="block text-xs font-medium text-gray-400 mb-1.5">
               Start Date
@@ -147,7 +148,7 @@ export default function AllEmployeeAttendance() {
               name="startDate"
               value={filters.startDate}
               onChange={handleInputChange}
-              className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-sm text-white focus:border-[#FFD700] focus:ring-1 focus:ring-[#FFD700] outline-none transition-all"
+              className="w-full bg-[#0f0f0f] border border-[#3d3d3d] rounded-lg px-3 py-2.5 text-sm text-white focus:border-[#FFD700] focus:ring-1 focus:ring-[#FFD700] outline-none transition-all"
               style={{ colorScheme: 'dark' }}
             />
           </div>
@@ -161,7 +162,7 @@ export default function AllEmployeeAttendance() {
               name="endDate"
               value={filters.endDate}
               onChange={handleInputChange}
-              className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-sm text-white focus:border-[#FFD700] focus:ring-1 focus:ring-[#FFD700] outline-none transition-all"
+              className="w-full bg-[#0f0f0f] border border-[#3d3d3d] rounded-lg px-3 py-2.5 text-sm text-white focus:border-[#FFD700] focus:ring-1 focus:ring-[#FFD700] outline-none transition-all"
               style={{ colorScheme: 'dark' }}
             />
           </div>
@@ -171,24 +172,24 @@ export default function AllEmployeeAttendance() {
               Attendance Status
             </label>
             <select
-              name="status"
-              value={filters.status}
-              onChange={handleInputChange}
-              className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-sm text-white focus:border-[#FFD700] focus:ring-1 focus:ring-[#FFD700] outline-none transition-all appearance-none cursor-pointer"
-              style={{ 
-                colorScheme: 'dark',
-                backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23FFD700' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 0.75rem center',
-                backgroundSize: '12px',
-                paddingRight: '2.5rem'
-              }}
-            >
-              <option value="" className="bg-[#1a1a1a] text-white">All Status</option>
-              <option value="present" className="bg-transparent text-white hover:bg-[#FFD700]">Present</option>
-              <option value="absent" className="bg-[#1a1a1a] text-white hover:bg-[#FFD700]">Absent</option>
-              <option value="halfday" className="bg-[#1a1a1a] text-white hover:bg-[#FFD700]">Half Day</option>
-            </select>
+    name="status"
+    value={filters.status}
+    onChange={handleInputChange}
+    className="w-full bg-[#0f0f0f] border border-[#3d3d3d] rounded-lg px-3 py-2.5 text-sm text-white 
+               focus:border-[#FFD700] focus:ring-1 focus:ring-[#FFD700] outline-none transition-all appearance-none cursor-pointer"
+    // style={{
+    //   backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23FFD700' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+    //   backgroundRepeat: 'no-repeat',
+    //   backgroundPosition: 'right 0.75rem center',
+    //   backgroundSize: '12px',
+    //   paddingRight: '2.5rem',
+    // }}
+  >
+    <option value="">All Status</option>
+    <option value="present">Present</option>
+    <option value="absent">Absent</option>
+    <option value="halfday">Half Day</option>
+  </select>
           </div>
 
           <div className="flex flex-col">
@@ -199,15 +200,15 @@ export default function AllEmployeeAttendance() {
               name="sortOrder"
               value={filters.sortOrder}
               onChange={handleInputChange}
-              className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-sm text-white focus:border-[#FFD700] focus:ring-1 focus:ring-[#FFD700] outline-none transition-all appearance-none cursor-pointer"
-              style={{ 
-                colorScheme: 'dark',
-                backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23FFD700' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 0.75rem center',
-                backgroundSize: '12px',
-                paddingRight: '2.5rem'
-              }}
+              className="w-full bg-[#0f0f0f] border border-[#3d3d3d] rounded-lg px-3 py-2.5 text-sm text-white focus:border-[#FFD700] focus:ring-1 focus:ring-[#FFD700] outline-none transition-all appearance-none cursor-pointer"
+              // style={{ 
+              //   colorScheme: 'dark',
+              //   backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23FFD700' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+              //   backgroundRepeat: 'no-repeat',
+              //   backgroundPosition: 'right 0.75rem center',
+              //   backgroundSize: '12px',
+              //   paddingRight: '2.5rem'
+              // }}
             >
               <option value="asc" className="bg-[#1a1a1a] text-white hover:bg-[#FFD700]/20">Oldest First</option>
               <option value="desc" className="bg-[#1a1a1a] text-white hover:bg-[#FFD700]/20">Newest First</option>
@@ -217,17 +218,18 @@ export default function AllEmployeeAttendance() {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto border border-[#2a2a2a] rounded-xl bg-[#1a1a1a] shadow-xl">
+      <div className="overflow-x-auto border border-[#3d3d3d] rounded-xl bg-[#1a1a1a] shadow-xl">
         <table className="w-full text-sm text-left min-w-[800px]">
-          <thead className="bg-[#222] text-[#FFD700] border-b-2 border-[#FFD700]/20">
+          <thead className="bg-[#FFD700] text-black border-b-2 border-[#222]">
             <tr>
-              <th className="p-3 sm:p-4 font-semibold whitespace-nowrap">Employee ID</th>
-              <th className="p-3 sm:p-4 font-semibold whitespace-nowrap">Date</th>
-              <th className="p-3 sm:p-4 font-semibold whitespace-nowrap">Status</th>
-              <th className="p-3 sm:p-4 font-semibold whitespace-nowrap">Check-In</th>
-              <th className="p-3 sm:p-4 font-semibold whitespace-nowrap">Check-Out</th>
-              <th className="p-3 sm:p-4 font-semibold whitespace-nowrap">Work Hours</th>
-              <th className="p-3 sm:p-4 text-center font-semibold whitespace-nowrap">Action</th>
+              <th className="p-3 sm:p-4 font-semibold whitespace-nowrap min-w-[120px]">Employee ID</th>
+              <th className="p-3 sm:p-4 font-semibold whitespace-nowrap min-w-[120px]">Date</th>
+              <th className="p-3 sm:p-4 font-semibold whitespace-nowrap min-w-[120px]">Status</th>
+              <th className="p-3 sm:p-4 font-semibold whitespace-nowrap min-w-[120px]">Check-In</th>
+              <th className="p-3 sm:p-4 font-semibold whitespace-nowrap min-w-[120px]">Check-Out</th>
+              <th className="p-3 sm:p-4 font-semibold whitespace-nowrap min-w-[120px]">Work Hours</th>
+              <th className="p-3 sm:p-4 text-center font-semibold whitespace-nowrap min-w-[120px]">Action</th>
+              <th className="p-3 sm:p-4 text-center font-semibold whitespace-nowrap min-w-[120px]">Update</th>
             </tr>
           </thead>
           <tbody>
@@ -259,9 +261,9 @@ export default function AllEmployeeAttendance() {
                   className="text-center py-12 text-gray-400"
                 >
                   <div className="flex flex-col items-center gap-2">
-                    <CalendarDays size={32} className="text-gray-600" />
+                    <CalendarDays size={32} className="text-gray-500" />
                     <span>No attendance records found</span>
-                    <span className="text-xs text-gray-500">Try adjusting your filters</span>
+                    <span className="text-xs text-gray-400">Try adjusting your filters</span>
                   </div>
                 </td>
               </tr>
@@ -307,15 +309,15 @@ export default function AllEmployeeAttendance() {
                         {status}
                       </span>
                     </td>
-                    <td className="p-3 sm:p-4 text-gray-300 font-mono text-xs">{checkIn}</td>
-                    <td className="p-3 sm:p-4 text-gray-300 font-mono text-xs">{checkOut}</td>
-                    <td className="p-3 sm:p-4 text-gray-200 font-medium">{workHours}</td>
+                    <td className="p-3 sm:p-4 text-gray-300 ">{checkIn}</td>
+                    <td className="p-3 sm:p-4 text-gray-300 ">{checkOut}</td>
+                    <td className="p-3 sm:p-4 text-gray-200 ">{workHours}</td>
                     <td className="p-3 sm:p-4 text-center">
                       <button
                         onClick={() =>
                           handleViewEmployee(item.userId?.employeeId)
                         }
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FFD700]/15 text-[#FFD700] rounded-lg hover:bg-[#FFD700]/25 transition-all duration-200 text-xs font-semibold border border-[#FFD700]/30"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FFD700]/15 text-[#FFD700] rounded-lg hover:bg-[#FFD700] hover:text-black transition-all duration-200 text-xs font-semibold border border-[#FFD700]/30"
                       >
                         <Eye size={14} /> View
                       </button>
@@ -327,7 +329,7 @@ export default function AllEmployeeAttendance() {
                         onClick={() =>
                           handleUpdateEmployee(item)
                         }
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FFD700]/15 text-[#FFD700] rounded-lg hover:bg-[#FFD700]/25 transition-all duration-200 text-xs font-semibold border border-[#FFD700]/30"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FFD700]/15 text-[#FFD700] rounded-lg hover:bg-[#FFD700] hover:text-black transition-all duration-200 text-xs font-semibold border border-[#FFD700]/30"
                       >
                         <Edit size={14} /> Update
                       </button>
@@ -351,7 +353,7 @@ export default function AllEmployeeAttendance() {
       {selectedRecord && (
         <UpdateAttendanceModal
          isOpen = {!!selectedRecord}
-         onClose = {() =>setSelectedRecord(null)}
+         onClose = {() =>(setSelectedRecord(null), refetch())}
          record = {selectedRecord}
          />
       )}
